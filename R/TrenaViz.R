@@ -17,6 +17,11 @@ state <- new.env(parent=emptyenv())
 state$models <- list()
 state$tbl.chipSeq <- NULL
 model.count <- 0   # for creating default model names
+MAX.TF.COUNT <- 50   # we display the top max.tf.cout TFs coming back from trena
+
+colors <- brewer.pal(8, "Dark2")
+totalColorCount <- length(colors)
+state$colorNumber <- 0
 #------------------------------------------------------------------------------------------------------------------------
 .TrenaViz <- setClass ("TrenaViz",
                     representation = representation(
@@ -49,6 +54,10 @@ TrenaViz <- function(projectName, quiet=TRUE)
    initialization.command <- sprintf("trenaProject <- %s()", projectName)
    eval(parse(text=initialization.command))
    setTargetGene(trenaProject, getSupportedGenes(trenaProject)[1])
+
+   state$tbl.enhancers <- getEnhancers(trenaProject)
+   state$tbl.dhs <- getEncodeDHS(trenaProject)
+   state$tbl.transcripts <- getTranscriptsTable(trenaProject)
 
    obj <- .TrenaViz(projectName=projectName, project=trenaProject, quiet=quiet)
 
@@ -123,7 +132,7 @@ setMethod('createServer', 'TrenaViz',
        state$tbl.dhs <- getEncodeDHS(obj@project)
        state$tbl.transcripts <- getTranscriptsTable(obj@project)
        shinyjs::html(selector=".logo", html=sprintf("trena %s", newGene), add=FALSE)
-       loadAndDisplayRelevantVariants(session, newGene)
+       loadAndDisplayRelevantVariants(obj@project, session, newGene)
        })
 
 
@@ -150,14 +159,7 @@ setMethod('createServer', 'TrenaViz',
 
    observeEvent(input$table_rows_selected, {
       selectedTableRow <- isolate(input$table_rows_selected)
-      dispatch.rowClickInModelTable(session, input, output, selectedTableRow)
-      #current.model.name <- isolate(input$modelSelector)
-      #if(current.model.name %in% ls(state$models)){
-      #   tf.names <- state$models[[current.model.name]]$model$gene
-      #   tf.name <- tf.names[selectedTableRow]
-      #   printf("tf: %s", tf.name)
-      #} else {
-      #   printf("failed to find %s in current model %s",
+      dispatch.rowClickInModelTable(obj@project, session, input, output, selectedTableRow)
       }) # observe row selection event
 
    observeEvent(input$currentGenomicRegion, {
@@ -166,15 +168,10 @@ setMethod('createServer', 'TrenaViz',
       state[["chromLocRegion"]] <- new.region
       })
 
-   print(1)
    setupIgvAndTableToggling(session, input);
-   print(2)
    setupAddTrack(obj@project, session, input, output)
-   print(3)
    setupDisplayRegion(obj@project, session, input, output)
-   print(4)
    setupBuildModel(obj@project, session, input, output)
-   print(5)
    })
 
 #------------------------------------------------------------------------------------------------------------------------

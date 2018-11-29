@@ -3,7 +3,6 @@ setupIgvAndTableToggling <- function(session, input)
    observeEvent(input$currentGenomicRegion, {
        newValue <- input$currentGenomicRegion
        state$chromLocRegion <- newValue
-       printf("currentGenomicRegion arrived, %s", newValue)
        })
 
    observeEvent(input$igvHideButton, {
@@ -288,7 +287,6 @@ setupBuildModel <- function(trenaProject, session, input, output)
           }, error=function(e){
                msg <- e$message
                print(msg)
-               browser()
                showModal(modalDialog(title="trena model building error", msg))
                }) # tryCatch
       }) # observe buildModelButton
@@ -307,7 +305,7 @@ buildModel <- function(trenaProject, session, input, output)
    expressionMatrixName <- input$expressionSet
    full.roi <- state$chromLocRegion
    chrom.loc <- trena::parseChromLocString(full.roi)
-   message(sprintf("  fpdb: %s", paste(footprintDatabases, collapse=", ")))
+   message(sprintf("  fpdb: %s", paste(footprint.database.names, collapse=", ")))
    message(sprintf("   roi: %s", full.roi))
    message(sprintf("   mtx: %s", expressionMatrixName))
    message(printf("  intersect with: %s", paste(tracks.to.intersect.with, collapse=",")))
@@ -499,7 +497,7 @@ displayModel <- function(session, input, output, tbl.model, new.model.name)
 
 } # displayModel
 #------------------------------------------------------------------------------------------------------------------------
-dispatch.rowClickInModelTable <- function(session, input, output, selectedTableRow)
+dispatch.rowClickInModelTable <- function(trenaProject, session, input, output, selectedTableRow)
 {
       #current.model.name <- isolate(input$modelSelector)
       #if(current.model.name %in% ls(state$models)){
@@ -523,8 +521,8 @@ dispatch.rowClickInModelTable <- function(session, input, output, selectedTableR
          tbl.fp.tf <- tbl.fp.tf[-dups,]
       tbl.tmp <- tbl.fp.tf[ c("chrom", "fp_start", "fp_end", "shortMotif")]
       colnames(tbl.tmp) <- c("chrom", "start", "end", "name")
-      colorNumber <<- (colorNumber %% totalColorCount) + 1
-      next.color <- colors[colorNumber]
+      state$colorNumber <- (state$colorNumber %% totalColorCount) + 1
+      next.color <- colors[state$colorNumber]
       loadBedTrack(session, sprintf("FP-%s", tf.name), tbl.tmp, color=next.color, trackHeight=25)
       } # if footprints
 
@@ -532,7 +530,7 @@ dispatch.rowClickInModelTable <- function(session, input, output, selectedTableR
       full.roi <- state$chromLocRegion
       chrom.loc <- trena::parseChromLocString(full.roi)
       if(is.null(state$tbl.chipSeq)){
-         showNotification("retrieving ChIP-seq data from database...")
+         showNotification("retrieving ChIP-seq data from database (100)...", duration=100, closeButton=TRUE)
          tbl.chipSeq <- with(chrom.loc, getChipSeq(trenaProject, chrom, start, end,  tf.names))
          #save(tbl.chipSeq, file="tbl.chipSeq.RData")
          state$tbl.chipSeq <- tbl.chipSeq
@@ -545,8 +543,8 @@ dispatch.rowClickInModelTable <- function(session, input, output, selectedTableR
       if(nrow(tbl.hits) > 0){
          tbl.tmp <- tbl.hits[, c("chrom", "start", "endpos", "name")]
          colnames(tbl.tmp) <- c("chrom", "start", "end", "name")
-         colorNumber <<- (colorNumber %% totalColorCount) + 1
-         next.color <- colors[colorNumber]
+         state$colorNumber <- (state$colorNumber %% totalColorCount) + 1
+         next.color <- colors[state$colorNumber]
          loadBedTrack(session, sprintf("Cs-%s", tf.name), tbl.tmp, color=next.color, trackHeight=25)
          }
       } # ChIP-seq hits
@@ -564,7 +562,7 @@ display.footprint.track <- function(session, input, output, tf)
 
 } # display.footprint.track
 #------------------------------------------------------------------------------------------------------------------------
-loadAndDisplayRelevantVariants <- function(session, newGene)
+loadAndDisplayRelevantVariants <- function(trenaProject, session, newGene)
 {
    variant.filenames <- getVariantDatasetNames(trenaProject)
    short.names <- names(variant.filenames)
