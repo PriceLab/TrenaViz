@@ -1,18 +1,19 @@
-Package: trenaViz
+Package: TrenaViz
 Type: Package
-Title: trenaViz: network and genome track visualization for trena
-Version: 0.99.1
+Title: TrenaViz
+Version: 0.99.2
 Date: 2018-11-29
 Author: Paul Shannon
 Maintainer: Paul Shannon <pshannon@systemsbiology.org>
-Depends: R (>= 3.4.0), RColorBrewer, shiny, shinyjs, shinydashboard, igvShiny, DT, TrenaProjectIGAP, trenaSGM
+Depends: R (>= 3.4.0), RColorBrewer, shiny, shinyjs, shinydashboard, igvShiny, DT, TrenaProjectIGAP, trenaSGM, later
 Imports: methods,
          BiocGenerics,
          later,
          VariantAnnotation
 Suggests: RUnit, BiocStyle
-Description: A BrowserViz subclass, using the browser to interactively explore trena data
+Description: build and explore trena models
 License: MIT
 LazyLoad: yes
 biocViews: Visualization, ThirdPartyClient
+Encoding: UTF-8
 RoxygenNote: 6.1.0
