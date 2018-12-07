@@ -384,7 +384,6 @@ buildRegionsTable <- function(tracks.to.intersect.with, chromosome, start.loc, e
    if(tracks.to.intersect.with == "allDNAForFootprints")
       return(data.frame(chrom=chromosome, start=start.loc, end=end.loc, stringsAsFactors=FALSE))
 
-   #browser()
    gr.region <- GRanges(seqnames=chromosome, IRanges(start.loc, end.loc))
    gr.enhancers <- GRanges(tbl.enhancers)
    gr.dhs <- GRanges(tbl.dhs)
@@ -393,9 +392,8 @@ buildRegionsTable <- function(tracks.to.intersect.with, chromosome, start.loc, e
    mcols(gr.enhancers) <- NULL
    mcols(gr.dhs) <- NULL
    gr.enhancers.or.dhs <- c(gr.enhancers, gr.dhs)
-   gr.enhancers.and.dhs <- intersect(gr.enhancers, gr.dhs)
+   gr.enhancers.and.dhs <- GenomicRanges::intersect(gr.enhancers, gr.dhs)
 
-   #browser()
    tbl.out  <- switch(tracks.to.intersect.with,
                   genehancer = {
                      tbl.ov <- as.data.frame(findOverlaps(gr.enhancers, gr.region, type="any"))

@@ -32,7 +32,7 @@ state$colorNumber <- 0
 #------------------------------------------------------------------------------------------------------------------------
 setGeneric('createUI',      signature='obj', function(obj) standardGeneric("createUI"))
 setGeneric('createServer',  signature='obj', function(obj, session, input, output) standardGeneric("createServer"))
-setGeneric('createApp',     signature='obj', function(obj, ui, server) standardGeneric("createApp"))
+setGeneric('createApp',     signature='obj', function(obj) standardGeneric("createApp"))
 #------------------------------------------------------------------------------------------------------------------------
 #' Create an TrenaViz object
 #'
@@ -123,15 +123,33 @@ setMethod('createServer', 'TrenaViz',
 
    function(obj, session, input, output){
 
-   observeEvent(input$chooseGene, ignoreInit=TRUE, {
-       newGene <- isolate(input$chooseGene)
+   observeEvent(input$setOffListGeneButton, ignoreInit=TRUE, {
+      newGene <- toupper(isolate(input$offListGene))
+      legit <- recognizedGene(obj@project, newGene)
+      if(!legit){
+        msg <- sprintf("'%s' not found in current datasets.", newGene)
+        showModal(modalDialog(title="gene nomination error", msg))
+        }
+      if(legit){
+        shinyjs::html(selector=".logo", html=sprintf("trena %s", newGene), add=FALSE)
+        setTargetGene(obj@project, newGene)
+        state$tbl.enhancers <- getEnhancers(obj@project)
+        state$tbl.dhs <- getEncodeDHS(obj@project)
+        state$tbl.transcripts <- getTranscriptsTable(obj@project)
+        showGenomicRegion(session, getGeneRegion(obj@project, flankingPercent=20))
+        }
+      })
+
+   observeEvent(input$chooseGeneFromList, ignoreInit=TRUE, {
+       #  TODO: consolidate this code with that above, setOffListGeneButton code
+       newGene <- isolate(input$chooseGeneFromList)
+       shinyjs::html(selector=".logo", html=sprintf("trena %s", newGene), add=FALSE)
        setTargetGene(obj@project, newGene)
        showGenomicRegion(session, getGeneRegion(obj@project, flankingPercent=20))
        printf("new targetGene: %s", getTargetGene(obj@project))
        state$tbl.enhancers <- getEnhancers(obj@project)
        state$tbl.dhs <- getEncodeDHS(obj@project)
        state$tbl.transcripts <- getTranscriptsTable(obj@project)
-       shinyjs::html(selector=".logo", html=sprintf("trena %s", newGene), add=FALSE)
        loadAndDisplayRelevantVariants(obj@project, session, newGene)
        })
 
@@ -213,7 +231,11 @@ setMethod('createServer', 'TrenaViz',
         condition = "input.sidebarMenu == 'igvAndTable'",
         actionButton(inputId = "igvHideButton", label = "Toggle IGV"),
         actionButton(inputId = "tableHideButton", label = "Toggle table"),
-        selectInput("chooseGene", "Choose Gene:", c("", getSupportedGenes(trenaProject))),
+        selectInput("chooseGeneFromList", "Choose Gene From List:", c("", getSupportedGenes(trenaProject))),
+        # div(style="display: inline-block;vertical-align:top; width:100px; margin:0px; !important;",
+        textInput("offListGene", label=NULL, placeholder="enter off-list gene here"),
+        #div(style="display: inline-block;vertical-align:top; width: 40px; margin-left:0px; margin-top:8px; !important;",
+        actionButton(inputId="setOffListGeneButton", label="Set off-list gene"),
         selectInput("addTrack", "Add Track:", .additionalTracksOnOffer(trenaProject)),
         selectInput("displayGenomicRegion", "Display Genomic Region:",
                     c("",
