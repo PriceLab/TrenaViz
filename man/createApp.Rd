@@ -6,10 +6,12 @@
 \alias{createApp}
 \title{Create a runnable shiny app}
 \usage{
-\S4method{createApp}{TrenaViz}(obj)
+\S4method{createApp}{TrenaViz}(obj, port = NA_integer_)
 }
 \arguments{
 \item{obj}{An object of class TrenaViz}
+
+\item{port}{An integer (e.g., 3838, 60041) NA_integer_ by default}
 }
 \description{
 Create a runnable shiny app

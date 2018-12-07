@@ -32,7 +32,7 @@ state$colorNumber <- 0
 #------------------------------------------------------------------------------------------------------------------------
 setGeneric('createUI',      signature='obj', function(obj) standardGeneric("createUI"))
 setGeneric('createServer',  signature='obj', function(obj, session, input, output) standardGeneric("createServer"))
-setGeneric('createApp',     signature='obj', function(obj) standardGeneric("createApp"))
+setGeneric('createApp',     signature='obj', function(obj, port=NA_integer_) standardGeneric("createApp"))
 #------------------------------------------------------------------------------------------------------------------------
 #' Create an TrenaViz object
 #'
@@ -327,23 +327,28 @@ setMethod('createServer', 'TrenaViz',
 #' @aliases createApp
 #'
 #' @param obj An object of class TrenaViz
+#' @param port An integer (e.g., 3838, 60041) NA_integer_ by default
 #'
 #' @export
 #'
 setMethod('createApp', 'TrenaViz',
 
-  function(obj){
+  function(obj, port=NA_integer_){
 
      server <- function(session, input, output){
         x <- createServer(obj, session, input, output)
         }
 
-     shinyOptions=list(launch.browser=FALSE)
+
      if(Sys.info()[["nodename"]] == "riptide.local"){
         shinyOptions <- list(host="0.0.0.0", launch.browser=TRUE)
+     }else{
+        shinyOptions=list(launch.browser=FALSE, host='0.0.0.0', port=port)
         }
 
      app <- shinyApp(createUI(obj), server, options=shinyOptions)
+
      return(app)
+
   })
 #------------------------------------------------------------------------------------------------------------------------

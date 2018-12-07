@@ -1,3 +1,6 @@
+inst/apps/igap/packages/*.tar.gz
+
+
 # History files
 .Rhistory
 .Rapp.history
