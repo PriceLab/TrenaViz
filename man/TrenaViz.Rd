@@ -13,6 +13,7 @@ import DT
 import VariantAnnotation
 import trenaSGM
 importFrom  RColorBrewer brewer.pal
+import colourpicker
 import later}
 \format{An object of class \code{environment} of length 3.}
 \usage{

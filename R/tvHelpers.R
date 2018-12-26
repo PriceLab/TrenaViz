@@ -1,3 +1,5 @@
+# tvHelpers.R
+#------------------------------------------------------------------------------------------------------------------------
 setupIgvAndTableToggling <- function(session, input)
 {
    observeEvent(input$currentGenomicRegion, {
@@ -143,6 +145,7 @@ setupAddTrack <- function(trenaProject, session, input, output)
       displayTrack(trenaProject, session, newTrackName)
       later(function() {updateSelectInput(session, "addTrack", selected=character(0))}, 1)
       })
+
 
 } # setupAddTrack
 #------------------------------------------------------------------------------------------------------------------------

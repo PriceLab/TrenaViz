@@ -7,6 +7,7 @@
 #' import VariantAnnotation
 #' import trenaSGM
 #' importFrom  RColorBrewer brewer.pal
+#' import colourpicker
 #' import later
 #------------------------------------------------------------------------------------------------------------------------
 #' @name TrenaViz
@@ -106,6 +107,7 @@ setMethod('createUI', 'TrenaViz',
       ) # dashboardPage
      return(ui)
    })
+
 #------------------------------------------------------------------------------------------------------------------------
 #' Create the shiny server
 #'
@@ -123,22 +125,24 @@ setMethod('createServer', 'TrenaViz',
 
    function(obj, session, input, output){
 
-   observeEvent(input$setOffListGeneButton, ignoreInit=TRUE, {
-      newGene <- toupper(isolate(input$offListGene))
-      legit <- recognizedGene(obj@project, newGene)
-      if(!legit){
-        msg <- sprintf("'%s' not found in current datasets.", newGene)
-        showModal(modalDialog(title="gene nomination error", msg))
-        }
-      if(legit){
-        shinyjs::html(selector=".logo", html=sprintf("trena %s", newGene), add=FALSE)
-        setTargetGene(obj@project, newGene)
-        state$tbl.enhancers <- getEnhancers(obj@project)
-        state$tbl.dhs <- getEncodeDHS(obj@project)
-        state$tbl.transcripts <- getTranscriptsTable(obj@project)
-        showGenomicRegion(session, getGeneRegion(obj@project, flankingPercent=20))
-        }
-      })
+      .createTrackFileUploader(session, input, output)
+
+      observeEvent(input$setOffListGeneButton, ignoreInit=TRUE, {
+         newGene <- toupper(isolate(input$offListGene))
+         legit <- recognizedGene(obj@project, newGene)
+         if(!legit){
+            msg <- sprintf("'%s' not found in current datasets.", newGene)
+            showModal(modalDialog(title="gene nomination error", msg))
+            }
+         if(legit){
+            shinyjs::html(selector=".logo", html=sprintf("trena %s", newGene), add=FALSE)
+            setTargetGene(obj@project, newGene)
+            state$tbl.enhancers <- getEnhancers(obj@project)
+            state$tbl.dhs <- getEncodeDHS(obj@project)
+            state$tbl.transcripts <- getTranscriptsTable(obj@project)
+            showGenomicRegion(session, getGeneRegion(obj@project, flankingPercent=20))
+            }
+         })
 
    observeEvent(input$chooseGeneFromList, ignoreInit=TRUE, {
        #  TODO: consolidate this code with that above, setOffListGeneButton code
@@ -236,7 +240,8 @@ setMethod('createServer', 'TrenaViz',
         textInput("offListGene", label=NULL, placeholder="enter off-list gene here"),
         #div(style="display: inline-block;vertical-align:top; width: 40px; margin-left:0px; margin-top:8px; !important;",
         actionButton(inputId="setOffListGeneButton", label="Set off-list gene"),
-        selectInput("addTrack", "Add Track:", .additionalTracksOnOffer(trenaProject)),
+        selectInput("addTrack", "Add Built-in Track:", .additionalTracksOnOffer(trenaProject)),
+        actionButton(inputId = "addTrackFromFileButton", label="Add Track from File..."),
         selectInput("displayGenomicRegion", "Display Genomic Region:",
                     c("",
                       "Full Gene" = "fullGeneRegion",
