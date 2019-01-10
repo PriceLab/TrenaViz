@@ -2,6 +2,7 @@
 #' import shinydashboard
 #' import shinyjs
 #' import later
+#' import yaml
 #' import igvShiny
 #' import DT
 #' import VariantAnnotation
@@ -54,11 +55,23 @@ TrenaViz <- function(projectName, quiet=TRUE)
    require(projectName, character.only=TRUE)
    initialization.command <- sprintf("trenaProject <- %s()", projectName)
    eval(parse(text=initialization.command))
+
+   dataManifest <- list()
+   base.class.manifest.file <- system.file(package="TrenaProject", "extdata", "genomeAnnotation", "manifest.yaml")
+   project.manifest.file <- system.file(package=projectName, "extdata", "genomeAnnotation", "manifest.yaml")
+
+   if(file.exists(base.class.manifest.file))
+      dataManifest <- c(dataManifest, yaml.load(readLines(base.class.manifest.file)))
+
+   if(file.exists(project.manifest.file))
+      dataManifest <- c(dataManifest, yaml.load(readLines(project.manifest.file)))
+
    setTargetGene(trenaProject, getSupportedGenes(trenaProject)[1])
 
    state$tbl.enhancers <- getEnhancers(trenaProject)
    state$tbl.dhs <- getEncodeDHS(trenaProject)
    state$tbl.transcripts <- getTranscriptsTable(trenaProject)
+   state$dataManifest <- dataManifest
 
    obj <- .TrenaViz(projectName=projectName, project=trenaProject, quiet=quiet)
 
@@ -81,7 +94,7 @@ setMethod('createUI', 'TrenaViz',
 
       ui <- dashboardPage(
         dashboardHeader(title=sprintf("trena %s", getTargetGene(obj@project))),
-        .createSidebar(obj@project),
+        .createSidebar(obj),
         dashboardBody(
            tags$head(tags$style(HTML('
         .main-header .logo {
@@ -223,7 +236,7 @@ setMethod('createServer', 'TrenaViz',
 
 } # createBody
 #------------------------------------------------------------------------------------------------------------------------
-.createSidebar <- function(trenaProject)
+.createSidebar <- function(obj)
 {
   dashboardSidebar(
     sidebarMenu(id="sidebarMenu",
@@ -235,12 +248,12 @@ setMethod('createServer', 'TrenaViz',
         condition = "input.sidebarMenu == 'igvAndTable'",
         actionButton(inputId = "igvHideButton", label = "Toggle IGV"),
         actionButton(inputId = "tableHideButton", label = "Toggle table"),
-        selectInput("chooseGeneFromList", "Choose Gene From List:", c("", getSupportedGenes(trenaProject))),
+        selectInput("chooseGeneFromList", "Choose Gene From List:", c("", getSupportedGenes(obj@project))),
         # div(style="display: inline-block;vertical-align:top; width:100px; margin:0px; !important;",
         textInput("offListGene", label=NULL, placeholder="enter off-list gene here"),
         #div(style="display: inline-block;vertical-align:top; width: 40px; margin-left:0px; margin-top:8px; !important;",
         actionButton(inputId="setOffListGeneButton", label="Set off-list gene"),
-        selectInput("addTrack", "Add Built-in Track:", .additionalTracksOnOffer(trenaProject)),
+        selectInput("addTrack", "Add Built-in Track:", .additionalTracksOnOffer(obj)),
         actionButton(inputId = "addTrackFromFileButton", label="Add Track from File..."),
         selectInput("displayGenomicRegion", "Display Genomic Region:",
                     c("",
@@ -252,13 +265,20 @@ setMethod('createServer', 'TrenaViz',
 
 } # .createSidebar
 #------------------------------------------------------------------------------------------------------------------------
-.additionalTracksOnOffer <- function(trenaProject)
+.additionalTracksOnOffer <- function(obj)
 {
-   trackOfferings <- list("",
-                          "Enhancers"="enhancers",
-                          "DNase HS (encode, clustered)"="dhs")
+   trackOfferings <- list("", "DNase HS (encode, clustered)"="dhs")
+   dm <- state$dataManifest
 
-   variantTrackNames <- getVariantDatasetNames(trenaProject)
+   for(i in seq_len(length(dm))){
+      detailed.name <- names(dm)[i]
+      desc <- dm[[i]]
+      display.name <- desc$displayName
+      trackOfferings[[display.name]] <- detailed.name
+      xyz <- 99
+      }
+
+   variantTrackNames <- getVariantDatasetNames(obj@project)
 
    for(i in seq_len(length(variantTrackNames))){
       trackName <- variantTrackNames[i]
@@ -276,7 +296,7 @@ setMethod('createServer', 'TrenaViz',
 
    return(trackOfferings)
 
-} # additionalTracksOnOffer
+} # .additionalTracksOnOffer
 #------------------------------------------------------------------------------------------------------------------------
 .createBuildModelTab <- function(project)
 {

@@ -4,6 +4,7 @@ setupIgvAndTableToggling <- function(session, input)
 {
    observeEvent(input$currentGenomicRegion, {
        newValue <- input$currentGenomicRegion
+       #printf("new genomic regions: %s", newValue)
        state$chromLocRegion <- newValue
        })
 
@@ -152,6 +153,32 @@ setupAddTrack <- function(trenaProject, session, input, output)
 displayTrack <- function(trenaProject, session, trackName)
 {
    printf("--- displayTrack('%s')", trackName)
+
+   #browser()
+   #xyz <- "tvHelpers::displayTrack"
+   #loc <- parseChromLocString(state$chromLocRegion)
+
+   targetGene <- getTargetGene(trenaProject)
+
+   if(trackName %in% names(state$dataManifest)){
+      if(trackName == "tbl.hiC.psychEncode.RData"){
+         tbl.hiC <- get(load(system.file(package="TrenaProjectAD", "extdata", "genomeAnnotation", "tbl.hiC.psychEncode.RData")))
+         tbl.subC <- subset(tbl.hiC, geneSymbol == targetGene)
+         printf("--- loading %d rows from tbl.hiC for gene %s", nrow(tbl.subC), targetGene)
+         title <- sprintf("PsychENCODE enhancers for %s", targetGene)
+         msg <- sprintf("count: %d", nrow(tbl.subC))
+         showModal(modalDialog(title=title, msg))
+         if(nrow(tbl.subC) > 0)
+            loadBedTrack(session, "HiC", tbl.subC, color="magenta")
+         } # psychEncode
+      if(trackName == "geneHancer.v4.7.allGenes.RData"){
+         f <- system.file(package="TrenaProject", "extdata", "genomeAnnotation", "geneHancer.v4.7.allGenes.RData")
+         tbl.gh <- get(load(f))
+         tbl.ghSub <- subset(tbl.gh, geneSymbol == targetGene)
+         loadBedGraphTrack(session, "GeneHancer", tbl.ghSub[, c(1:3,5)], color="maroon", autoscale=FALSE, min=0, max=50)
+         } # genehancer
+      return()
+      } # if trackName in dataManifest
 
    if(grepl(".variants", trackName, ignore.case=TRUE))
       displayBedTrack(trenaProject, session, trackName)
@@ -341,7 +368,6 @@ run.trenaSGM <- function(trenaProject,
 {
    message(sprintf("--- entering run.trenaSGM"))
       # no search for overlaps just yet: ignore "tracks.to.intersect.with"
-   #browser()
    tbl.regions <- buildRegionsTable(tracks.to.intersect.with, chromosome, start.loc, end.loc,
                                     state$tbl.enhancers, state$tbl.dhs)
    #tbl.regions <- data.frame(chrom=chromosome, start=start.loc, end=end.loc, stringsAsFactors=FALSE)
@@ -511,7 +537,6 @@ dispatch.rowClickInModelTable <- function(trenaProject, session, input, output, 
    action.name     <- isolate(input$selectRowAction)
    expression.matrix.name <- isolate(input$expressionSet)
    #printf("%s of model %s, expression.set %s: %s", tf.name, current.model.name, expression.matrix.name, action.name)
-   # browser()
    xyz <- "botton of dispatch.rowClick"
 
    if(action.name == "Footprints"){

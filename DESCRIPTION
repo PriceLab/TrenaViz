@@ -1,11 +1,12 @@
 Package: TrenaViz
 Type: Package
 Title: TrenaViz
-Version: 0.99.12
-Date: 2018-12-26
+Version: 0.99.17
+Date: 2019-01-09
 Author: Paul Shannon
 Maintainer: Paul Shannon <pshannon@systemsbiology.org>
-Depends: R (>= 3.4.0), RColorBrewer, colourpicker, shiny, shinyjs, shinydashboard, igvShiny, DT, TrenaProjectIGAP, trenaSGM, later
+Depends: R (>= 3.4.0), igvShiny (>= 0.99.73), RColorBrewer, colourpicker, shiny, shinyjs, shinydashboard,
+         DT, TrenaProjectAD, trenaSGM, later, yaml
 Imports: methods,
          BiocGenerics,
          later,

@@ -8,6 +8,7 @@
 import shinydashboard
 import shinyjs
 import later
+import yaml
 import igvShiny
 import DT
 import VariantAnnotation
