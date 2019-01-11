@@ -327,13 +327,17 @@ buildModel <- function(trenaProject, session, input, output)
 {
    model.name <- sprintf("trena.model.%s", input$modelNameTextInput)
    message(sprintf("about to build '%s'", model.name))
+   # browser()
+   # xyz <- "tvHelpders::buildModel"
    footprint.database.names <- input$footprintDatabases
    tracks.to.intersect.with <- input$intersectWithRegions
    motifMapping <- isolate(input$motifMapping)
    if(tolower(motifMapping) == "motifdb + tfclass")
       motifMapping <- c("MotifDb", "TFClass")
    expressionMatrixName <- input$expressionSet
+   message(sprintf("   mtx: %s", expressionMatrixName))
    full.roi <- state$chromLocRegion
+   message(sprintf("   roi: %s", full.roi))
    chrom.loc <- trena::parseChromLocString(full.roi)
    message(sprintf("  fpdb: %s", paste(footprint.database.names, collapse=", ")))
    message(sprintf("   roi: %s", full.roi))
