@@ -104,10 +104,6 @@ setMethod('createUI', 'TrenaViz',
           font-weight: bold;
           font-size: 24px;
           }
-        .modal-dialog{
-           width: 1000px;
-           height: 700px;
-           }
         #igvShiny{
           background: white;
           border: 1px solid black;
