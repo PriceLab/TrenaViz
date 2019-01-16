@@ -543,6 +543,10 @@ dispatch.rowClickInModelTable <- function(trenaProject, session, input, output, 
    #printf("%s of model %s, expression.set %s: %s", tf.name, current.model.name, expression.matrix.name, action.name)
    xyz <- "botton of dispatch.rowClick"
 
+   full.roi <- state$chromLocRegion
+   chrom.loc <- trena::parseChromLocString(full.roi)
+
+
    if(action.name == "Footprints"){
       tbl.fp <- state$models[[current.model.name]]$regulatoryRegions
       tbl.fp.tf <- subset(tbl.fp, geneSymbol==tf.name)
@@ -556,11 +560,34 @@ dispatch.rowClickInModelTable <- function(trenaProject, session, input, output, 
       loadBedTrack(session, sprintf("FP-%s", tf.name), tbl.tmp, color=next.color, trackHeight=25)
       } # if footprints
 
+   if(action.name == "Binding Sites"){
+      dialog <- bindingSitesOptionsDialog(tf.name)
+      showModal(dialog)
+      motifNames.tfClass <- geneToMotif(MotifDb, tf.name, source="TFClass")$motif
+      pwms.tfClass <- query(MotifDb, "", motifNames.tfClass)
+      motifNames.motifDb <- geneToMotif(MotifDb, tf.name, source="MotifDb")
+      full.motif.names <- rownames(geneToMotif(MotifDb, tf.name, source="MotifDb"))
+      pwms.motifDb <- MotifDb[full.motif.names]
+      pwm.name.oi <- c(names(pwms.tfClass), names(pwms.motifDb))[1]
+      pwm.oi <- MotifDb[pwm.name.oi]
+      tbl.regions <- with(chrom.loc, data.frame(chrom=chrom, start=start, end=end, stringsAsFactors=FALSE))
+      mm <- MotifMatcher("hg38", as.list(pwm.oi), quiet=TRUE)
+      matchThreshold <- 80
+      tbl.matches <- findMatchesByChromosomalRegion(mm, tbl.regions, pwmMatchMinimumAsPercentage=matchThreshold)
+      if(nrow(tbl.matches) > 0){
+         tbl.tmp <- tbl.matches[, c("chrom", "motifStart", "motifEnd", "motifRelativeScore")]
+         colnames(tbl.tmp) <- c("chrom", "start", "end", "value")
+         state$colorNumber <- (state$colorNumber %% totalColorCount) + 1
+         next.color <- colors[state$colorNumber]
+         scale.bottom <- 0.9 * (matchThreshold/100)
+         loadBedGraphTrack(session, tf.name, tbl.tmp, color=next.color, trackHeight=25, autoscale=FALSE,
+                           min=scale.bottom, max=1.0)
+         }
+      } # if footprints
+
    if(action.name == "ChIP-seq hits"){
-      full.roi <- state$chromLocRegion
-      chrom.loc <- trena::parseChromLocString(full.roi)
       if(is.null(state$tbl.chipSeq)){
-         showNotification("retrieving ChIP-seq data from database (100)...", duration=100, closeButton=TRUE)
+         showNotification("retrieving ChIP-seq data from database...", duration=100, closeButton=TRUE)
          tbl.chipSeq <- with(chrom.loc, getChipSeq(trenaProject, chrom, start, end,  tf.names))
          #save(tbl.chipSeq, file="tbl.chipSeq.RData")
          state$tbl.chipSeq <- tbl.chipSeq
@@ -612,4 +639,44 @@ loadAndDisplayRelevantVariants <- function(trenaProject, session, newGene)
       }
 
 } # loadAndDisplayRelevantVariants
+#------------------------------------------------------------------------------------------------------------------------
+setupDisplayMotifs <- function(trenaProject, session, input, output)
+{
+  observeEvent(input$displayMotifButton2, ignoreInit=TRUE, {
+     output$motifRenderingPanel2 <- renderPlot({
+        pwm <- query(MotifDb, "MA0048.2", "jaspar2018")[[1]]
+        lyl1.motifs <- geneToMotif(MotifDb, "LYL1", source="TFClass")$motif
+        xx <- head(lyl1.motifs, n=8)
+        x <- lapply(xx, function(motif) query(MotifDb, motif)[[1]])
+        names(x) <- xx
+        ggseqlogo(x, ncol=4)
+        #ggseqlogo(pwm)
+        #tbl <- data.frame(x=runif(10), y=runif(10))
+        #ggplot(tbl, aes(x=x, y=y)) + geom_point()
+        })
+     })
+
+  #output$motifPlotRenderingPanel <- renderPlot({
+  #   input$displayMotifButton
+  #   ggplot(mtcars, aes(x=wt, y=mpg)) + geom_point()
+  #   })
+
+}
+#------------------------------------------------------------------------------------------------------------------------
+bindingSitesOptionsDialog <- function(tf.name)
+{
+   lyl1.motifs <- geneToMotif(MotifDb, "LYL1", source="TFClass")$motif
+   xx <- head(lyl1.motifs, n=8)
+   x <- lapply(xx, function(motif) query(MotifDb, motif)[[1]])
+   names(x) <- xx
+   ggseqlogo(x, ncol=4)
+
+   modalDialog("myTitle", mainPanel(
+                             actionButton(inputId = "displayMotifButton2", label = "Display Motif"),
+                             h3("fu"),
+                             h5("bar"),
+                             plotOutput("motifRenderingPanel2"),
+                             "my message"))
+
+} # bindingSitesOptionsDialog
 #------------------------------------------------------------------------------------------------------------------------

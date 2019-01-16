@@ -6,7 +6,7 @@ Date: 2019-01-10
 Author: Paul Shannon
 Maintainer: Paul Shannon <pshannon@systemsbiology.org>
 Depends: R (>= 3.4.0), igvShiny (>= 0.99.73), RColorBrewer, colourpicker, shiny, shinyjs, shinydashboard,
-         DT, TrenaProjectAD, trenaSGM, later, yaml
+         DT, TrenaProjectAD, trenaSGM, later, yaml, ggseqlogo
 Imports: methods,
          BiocGenerics,
          later,

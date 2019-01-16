@@ -10,6 +10,8 @@
 #' importFrom  RColorBrewer brewer.pal
 #' import colourpicker
 #' import later
+#' import MotifDb
+#' import ggpseqlogo
 #------------------------------------------------------------------------------------------------------------------------
 #' @name TrenaViz
 #' @rdname TrenaViz
@@ -102,6 +104,10 @@ setMethod('createUI', 'TrenaViz',
           font-weight: bold;
           font-size: 24px;
           }
+        .modal-dialog{
+           width: 1000px;
+           height: 700px;
+           }
         #igvShiny{
           background: white;
           border: 1px solid black;
@@ -207,6 +213,7 @@ setMethod('createServer', 'TrenaViz',
    setupAddTrack(obj@project, session, input, output)
    setupDisplayRegion(obj@project, session, input, output)
    setupBuildModel(obj@project, session, input, output)
+   setupDisplayMotifs(obj@project, session, input, output)
    })
 
 #------------------------------------------------------------------------------------------------------------------------
@@ -223,13 +230,16 @@ setMethod('createServer', 'TrenaViz',
                       br(),
                       #wellPanel(
                         h4("TF selection will display:"),
-                        selectInput("selectRowAction", NULL,  c("(no action)", "Footprints", "ChIP-seq hits",
-                                                                sprintf("Plot expression, TF vs target gene")))
+                      selectInput("selectRowAction", NULL,  c("(no action)",
+                                                              "Footprints",
+                                                              "Binding Sites",
+                                                              "ChIP-seq hits"))
                       ) # column
                ) # fluidRow
             ), # tabItem 1
          .createBuildModelTab(project),
-         .createVideoTab()
+         .createVideoTab(),
+         .createMotifTab()
          ) # tabItems
 
    return(body)
@@ -242,7 +252,8 @@ setMethod('createServer', 'TrenaViz',
     sidebarMenu(id="sidebarMenu",
        menuItem("IGV and Current Models", tabName = "igvAndTable"),
        menuItem("Build a new Model",      tabName = "buildModels"),
-       menuItem("Introductory video",     tabName = "video")
+       menuItem("Introductory video",     tabName = "video"),
+       menuItem("Motifs",                 tabName = "motifTab")
       ),
     conditionalPanel(id="igvTableWidgets",
         condition = "input.sidebarMenu == 'igvAndTable'",
@@ -346,6 +357,18 @@ setMethod('createServer', 'TrenaViz',
 
 } # .createVideoTab
 #------------------------------------------------------------------------------------------------------------------------
+.createMotifTab <- function()
+{
+   xyz <- ".createMotifTab"
+   tab <- tabItem(tabName="motifTab",
+                  h4("Select a Motif"),
+                  actionButton(inputId = "displayMotifButton", label = "Display Motif"),
+                  plotOutput("motifPlotRenderingPanel", height=800)
+                  )
+   return(tab)
+
+} # .createMotifTab
+#------------------------------------------------------------------------------------------------------------------------
 #' Create a runnable shiny app
 #'
 #' @rdname createApp
@@ -364,10 +387,9 @@ setMethod('createApp', 'TrenaViz',
         x <- createServer(obj, session, input, output)
         }
 
-
      if(Sys.info()[["nodename"]] == "riptide.local"){
-        shinyOptions <- list(host="0.0.0.0", launch.browser=TRUE)
-     }else{
+        shinyOptions <- list(host="0.0.0.0", port=port, launch.browser=TRUE)
+     } else {
         shinyOptions=list(launch.browser=FALSE, host='0.0.0.0', port=port)
         }
 

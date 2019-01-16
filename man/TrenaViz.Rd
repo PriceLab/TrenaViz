@@ -15,7 +15,9 @@ import VariantAnnotation
 import trenaSGM
 importFrom  RColorBrewer brewer.pal
 import colourpicker
-import later}
+import later
+import MotifDb
+import ggpseqlogo}
 \format{An object of class \code{environment} of length 3.}
 \usage{
 state
