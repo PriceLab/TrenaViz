@@ -3,7 +3,7 @@
 export(BindingSitesManager)
 export(TrenaViz)
 exportMethods(createApp)
-exportMethods(createDialog)
+exportMethods(createPage)
 exportMethods(createServer)
 exportMethods(createUI)
 exportMethods(renderLogos)

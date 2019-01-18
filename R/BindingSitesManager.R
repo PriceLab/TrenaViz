@@ -11,8 +11,8 @@
                                      quiet="logical")
                                   )
 #------------------------------------------------------------------------------------------------------------------------
-setGeneric("createDialog",  signature="obj", function(obj) standardGeneric("createDialog"))
-setGeneric("renderLogos",        signature="obj", function(obj) standardGeneric("renderLogos"))
+setGeneric("createPage",    signature="obj", function(obj) standardGeneric("createPage"))
+setGeneric("renderLogos",   signature="obj", function(obj, tfMappingOption) standardGeneric("renderLogos"))
 #------------------------------------------------------------------------------------------------------------------------
 #' Create an BindingSitesManager object
 #'
@@ -40,23 +40,28 @@ BindingSitesManager <- function(tf, organism, genome, quiet=TRUE)
 #------------------------------------------------------------------------------------------------------------------------
 #' create and return the control-rich UI
 #'
-#' @rdname createDialog
-#' @aliases createDialog
+#' @rdname createPage
+#' @aliases createPage
 #'
 #' @param obj An object of class BindingSitesManager
 #'
 #' @export
 #'
-setMethod("createDialog", "BindingSitesManager",
+setMethod("createPage", "BindingSitesManager",
 
-    function(obj){
-       dialog <-  modalDialog(
-                    mainPanel(
-                       actionButton(inputId = "displayMotifButton", label="Display Motifs"),
-                       hidden(plotOutput("motifRenderingPanel"))),
-                    title=obj@TF, size="l")
-
-       return(dialog)
+     function(obj) {
+        div(id="bindingSitesManagerPageContent",
+            fluidRow(
+               column(1, offset=4, h2(obj@TF))),
+            br(),
+            fluidRow(
+                column(3, offset=3,
+                       radioButtons("tfMotifMappingOptions", "TF-Motif Mapping Options",
+                                          c("MotifDb", "TFClass", "both"), selected="MotifDb")),
+                column(1, actionButton("displayMotifsButton", "Display Motifs")),
+                column(1, actionButton("displayTrackButton", "Display Track"))),
+            fluidRow(id="motifPlottingRow",
+                plotOutput(outputId="motifRenderingPanel", height="1000px")))
        })
 
 #------------------------------------------------------------------------------------------------------------------------
@@ -71,21 +76,34 @@ setMethod("createDialog", "BindingSitesManager",
 #'
 setMethod("renderLogos", "BindingSitesManager",
 
-    function(obj){
+    function(obj, tfMappingOption){
 
       tf <- obj@TF
-      printf("--- createDialog, tf (%s, %s): %s", obj@organism, obj@genome, tf)
+      mappingOptions <- tolower(tfMappingOption)
+      if(tfMappingOption == "both")
+        mappingOptions <- c("motifdb", "tfclass")
 
       pwms.tfClass.longNames <- c()
-      motifNames.tfClass <- geneToMotif(MotifDb, tf, source="TFClass")$motif
-      printf("tfClass motifs: %d", length(motifNames.tfClass))
-      if(length(motifNames.tfClass) > 0)
-         pwms.tfClass.longNames <- names(query(MotifDb, obj@organism, motifNames.tfClass))
+      motifNames.motifDb <- c()
 
-      pwms.motifDb <- c()
-      motifNames.motifDb <- rownames(geneToMotif(MotifDb, tf, source="MotifDb"))
-      printf("motifDb motifs: %d", length(motifNames.motifDb))
+      if("tfclass" %in% mappingOptions){
+         motifNames.tfClass <- geneToMotif(MotifDb, tf, source="TFClass")$motif
+         printf("tfClass motifs: %d", length(motifNames.tfClass))
+         if(length(motifNames.tfClass) > 0)
+            pwms.tfClass.longNames <- names(query(MotifDb, obj@organism, motifNames.tfClass))
+         } # if tfclass
+
+      if("motifdb" %in% mappingOptions){
+         pwms.motifDb <- c()
+         motifNames.motifDb <- rownames(geneToMotif(MotifDb, tf, source="MotifDb"))
+         printf("motifDb motifs: %d", length(motifNames.motifDb))
+         }
+
       pwm.names.unique <- unique(c(pwms.tfClass.longNames, motifNames.motifDb))
+       if(length(pwm.names.unique) == 0){
+          showNotification("No motifs found with specified mapping")
+          return()
+          }
       all.pwms <- MotifDb[pwm.names.unique]
       printf("launching ggseqlogo, %d matrices", length(all.pwms))
       show("motifRenderingPanel")
