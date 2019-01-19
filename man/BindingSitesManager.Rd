@@ -6,7 +6,7 @@
 \alias{.BindingSitesManager}
 \title{import shiny}
 \usage{
-BindingSitesManager(tf, organism, genome, quiet = TRUE)
+BindingSitesManager(organism, genome, quiet = TRUE)
 }
 \arguments{
 \item{organism}{A character string, one of the supported species names:  hsapiens, mmuscuulus}
@@ -14,8 +14,6 @@ BindingSitesManager(tf, organism, genome, quiet = TRUE)
 \item{genome}{A character string, one of the supported genome builds: hg38, mm10}
 
 \item{quiet}{A logical indicating whether or not the Trena object should print output}
-
-\item{TF}{A geneSymbol string identifying a transcription factor}
 }
 \value{
 An object of the BindingSitesManager class

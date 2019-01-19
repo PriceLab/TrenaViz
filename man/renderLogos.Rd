@@ -6,7 +6,7 @@
 \alias{renderLogos}
 \title{show the control-rich UI}
 \usage{
-\S4method{renderLogos}{BindingSitesManager}(obj)
+\S4method{renderLogos}{BindingSitesManager}(obj, tfMappingOption)
 }
 \arguments{
 \item{obj}{An object of class BindingSitesManager}

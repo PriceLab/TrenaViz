@@ -5,14 +5,17 @@
 #------------------------------------------------------------------------------------------------------------------------
 .BindingSitesManager <- setClass ("BindingSitesManager",
                                   representation = representation(
-                                     TF="character",
                                      organism="character",
                                      genome="character",
-                                     quiet="logical")
+                                     quiet="logical",
+                                     state="environment")
                                   )
 #------------------------------------------------------------------------------------------------------------------------
-setGeneric("createPage",    signature="obj", function(obj) standardGeneric("createPage"))
-setGeneric("renderLogos",   signature="obj", function(obj, tfMappingOption) standardGeneric("renderLogos"))
+setGeneric("addEventHandlers",  signature="obj", function(obj, session, input, output) standardGeneric("addEventHandlers"))
+setGeneric("setTF",             signature="obj", function(obj, tf) standardGeneric("setTF"))
+setGeneric("createPage",        signature="obj", function(obj) standardGeneric("createPage"))
+setGeneric("renderLogos",       signature="obj", function(obj, tfMappingOption) standardGeneric("renderLogos"))
+setGeneric("removeLogos",       signature="obj", function(obj) standardGeneric("removeLogos"))
 #------------------------------------------------------------------------------------------------------------------------
 #' Create an BindingSitesManager object
 #'
@@ -21,7 +24,6 @@ setGeneric("renderLogos",   signature="obj", function(obj, tfMappingOption) stan
 #'
 #' @rdname BindingSitesManager
 #'
-#' @param TF A geneSymbol string identifying a transcription factor
 #' @param organism  A character string, one of the supported species names:  hsapiens, mmuscuulus
 #' @param genome  A character string, one of the supported genome builds: hg38, mm10
 #' @param quiet A logical indicating whether or not the Trena object should print output
@@ -30,13 +32,33 @@ setGeneric("renderLogos",   signature="obj", function(obj, tfMappingOption) stan
 #'
 #' @export
 #'
-BindingSitesManager <- function(tf, organism, genome, quiet=TRUE)
+BindingSitesManager <- function(organism, genome, quiet=TRUE)
 {
-   obj <- .BindingSitesManager(TF=tf, organism=organism, genome=genome, quiet=quiet)
+   state <- new.env(parent=emptyenv())
+   state$TF <- NULL
+
+   obj <- .BindingSitesManager(organism=organism, genome=genome, quiet=quiet, state=state)
 
    obj
 
 } # BindingSitesManager
+#------------------------------------------------------------------------------------------------------------------------
+#' specity the tf (transcription factor) to work on
+#'
+#' @rdname setTF
+#' @aliases setTF
+#'
+#' @param obj An object of class BindingSitesManager
+#' @param TF character string, the transcription factor we are currently concerned with
+#'
+#' @export
+#'
+setMethod("setTF", "BindingSitesManager",
+
+          function(obj, tf) {
+             obj@state$TF <- tf
+             })
+
 #------------------------------------------------------------------------------------------------------------------------
 #' create and return the control-rich UI
 #'
@@ -52,16 +74,25 @@ setMethod("createPage", "BindingSitesManager",
      function(obj) {
         div(id="bindingSitesManagerPageContent",
             fluidRow(
-               column(1, offset=4, h2(obj@TF))),
+               column(1, offset=4, h2("CEBPA"))),
+               #column(1, offset=4, h2(obj@state$TF))),
             br(),
             fluidRow(
-                column(3, offset=3,
-                       radioButtons("tfMotifMappingOptions", "TF-Motif Mapping Options",
-                                          c("MotifDb", "TFClass", "both"), selected="MotifDb")),
-                column(1, actionButton("displayMotifsButton", "Display Motifs")),
-                column(1, actionButton("displayTrackButton", "Display Track"))),
+               column(2, offset=1,
+                      radioButtons("tfMotifMappingOptions", "TF-Motif Mapping Options",
+                                  c("MotifDb", "TFClass", "both"), selected="MotifDb", inline=TRUE),
+                      actionButton("displayMotifsButton", "Display Motifs")),
+               column(3,
+                      selectInput("motifChooser", "Choose Motif", c()),
+                      selectInput("matchAlgorithmChooser", "Choose Match Algorithm",
+                                  c("Biostrings matchPWM", "MOODS matchMotifs"))),
+
+               column(3, sliderInput("matchThresholdSlider", "Match Threshold: ", min=0, max=1, value=0.9),
+                      actionButton("displayTrackButton", "Display Track"))
+               ),
             fluidRow(id="motifPlottingRow",
-                plotOutput(outputId="motifRenderingPanel", height="1000px")))
+                     plotOutput(outputId="motifRenderingPanel", height="1000px"))
+            )
        })
 
 #------------------------------------------------------------------------------------------------------------------------
@@ -78,7 +109,7 @@ setMethod("renderLogos", "BindingSitesManager",
 
     function(obj, tfMappingOption){
 
-      tf <- obj@TF
+      tf <- obj@state$TF
       mappingOptions <- tolower(tfMappingOption)
       if(tfMappingOption == "both")
         mappingOptions <- c("motifdb", "tfclass")
@@ -104,13 +135,103 @@ setMethod("renderLogos", "BindingSitesManager",
           showNotification("No motifs found with specified mapping")
           return()
           }
+      shinyjs::enable("motifChooser")
+      updateSelectInput(obj@state$session, "motifChooser", choices=pwm.names.unique, selected=character(0))
+      shinyjs::enable("displayTrackButton")
       all.pwms <- MotifDb[pwm.names.unique]
       printf("launching ggseqlogo, %d matrices", length(all.pwms))
-      show("motifRenderingPanel")
+      show("BindingSitesManager: renderLogos, about to call ggseqlogo")
       ggseqlogo(lapply(all.pwms, function(pwm) pwm))
       })
 
 #------------------------------------------------------------------------------------------------------------------------
+#' remove the image
+#'
+#' @rdname removeLogos
+#' @aliases removeLogos
+#'
+#' @param obj An object of class BindingSitesManager
+#'
+#' @export
+#'
+setMethod("removeLogos", "BindingSitesManager",
+
+    function(obj){
+       shinyjs::enable("motifChooser")
+       shinyjs::disable("displayTrackButton")
+       removeUI(selector="#motifRenderingPanel > img", immediate=TRUE)
+       })
+
+#------------------------------------------------------------------------------------------------------------------------
+#' add shiny event handlers
+#'
+#' @rdname addEventHandlers
+#' @aliases addEventHandlers
+#'
+#' @param obj An object of class BindingSitesManager
+#' @param session a Shiny session object
+#' @param input a Shiny input object
+#' @param output a Shiny output object
+#'
+#' @export
+#'
+setMethod("addEventHandlers", "BindingSitesManager",
+
+     function(obj, session, input, output){
+
+       obj@state$session <- session
+       obj@state$input <- input
+       obj@state$output <- output
+
+       observeEvent(input$clearLogosButton, ignoreInit=TRUE, {
+          removeLogos(obj)
+          })
+
+        observeEvent(input$tfSelector, ignoreInit=TRUE, {
+           removeLogos(obj)
+           tf <- input$tfSelector
+           if(nchar(tf) == 0) return();
+           printf("tf: %s",   tf)
+           setTF(obj, tf)
+           removeUI(selector="#bindingSitesManagerPageContent", immediate=TRUE)
+           insertUI(selector="#bindingSitesManagerPage", where="afterEnd", createPage(obj), immediate=TRUE)
+           updateTabItems(session, "sidebarMenu", select="bindingSitesManagerTab")
+           removeLogos(obj)
+           })
+
+        observeEvent(input$displayMotifsButton, ignoreInit=TRUE, {
+            output$motifRenderingPanel <- renderPlot({
+               printf("observing displayMotifsButton")
+               tfMapping <- isolate(input$tfMotifMappingOptions)
+               xyz <- "just before render logos"
+               renderLogos(obj, tfMapping)
+               })
+          })
+
+        observeEvent(input$displayTrackButton, ignoreInit=TRUE, {
+           motif <- isolate(input$motifChooser)
+           sequenceMatchAlgorithm <- isolate(input$matchAlgorithmChooser)
+           matchThreshold <- isolate(input$matchThresholdSlider)
+           m4 <- MultiMethodMotifMatcher(genonemName, motif, sequenceMatchAlgorithm, matchThreshold)
+           #mm <- MotifMatcher("hg38", as.list(pwm.oi), quiet=TRUE)
+           # matchThreshold <- 80
+           # tbl.matches <- findMatchesByChromosomalRegion(mm, tbl.regions, pwmMatchMinimumAsPercentage=matchThreshold)
+           # if(nrow(tbl.matches) > 0){
+           #    tbl.tmp <- tbl.matches[, c("chrom", "motifStart", "motifEnd", "motifRelativeScore")]
+           #    colnames(tbl.tmp) <- c("chrom", "start", "end", "value")
+           #    state$colorNumber <- (state$colorNumber %% totalColorCount) + 1
+           #    next.color <- colors[state$colorNumber]
+           #    scale.bottom <- 0.9 * (matchThreshold/100)
+           #    loadBedGraphTrack(session, tf.name, tbl.tmp, color=next.color, trackHeight=25, autoscale=FALSE,
+           #    min=scale.bottom, max=1.0)
+           #    }
+           })
+
+
+     }) # addEventHandlers
+
+#------------------------------------------------------------------------------------------------------------------------
+#          signature="obj", function(obj, session, input, output) standardGeneric("createPage"))
 #
 #       dialog <- bindingSitesOptionsDialog(tf.name)
 #       showModal(dialog)

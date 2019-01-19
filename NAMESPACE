@@ -2,8 +2,11 @@
 
 export(BindingSitesManager)
 export(TrenaViz)
+exportMethods(addEventHandlers)
 exportMethods(createApp)
 exportMethods(createPage)
 exportMethods(createServer)
 exportMethods(createUI)
+exportMethods(removeLogos)
 exportMethods(renderLogos)
+exportMethods(setTF)
