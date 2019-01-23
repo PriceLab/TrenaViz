@@ -212,7 +212,7 @@ setMethod("addEventHandlers", "BindingSitesManager",
            motif <- isolate(input$motifChooser)
            sequenceMatchAlgorithm <- isolate(input$matchAlgorithmChooser)
            matchThreshold <- isolate(input$matchThresholdSlider)
-           m4 <- MultiMethodMotifMatcher(genonemName, motif, sequenceMatchAlgorithm, matchThreshold)
+           m4 <- MultiMethodMotifMatcher(obj@genome, motif, sequenceMatchAlgorithm, matchThreshold)
            #mm <- MotifMatcher("hg38", as.list(pwm.oi), quiet=TRUE)
            # matchThreshold <- 80
            # tbl.matches <- findMatchesByChromosomalRegion(mm, tbl.regions, pwmMatchMinimumAsPercentage=matchThreshold)
