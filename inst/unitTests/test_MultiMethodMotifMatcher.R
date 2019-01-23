@@ -38,6 +38,7 @@ runTests <- function()
    test_constructor()
    test_biostringsAlgorithm()
    test_moodsAlgorithm()
+   test_both_MZF1_31kb()
 
 } # runTests
 #------------------------------------------------------------------------------------------------------------------------
@@ -77,4 +78,23 @@ test_moodsAlgorithm <- function()
    checkTrue(tbl.hits.m$score > 17)
 
 } # test_moodsAlgorithm
+#------------------------------------------------------------------------------------------------------------------------
+test_both_MZF1_31kb <- function()
+{
+   printf("--- test_both_MZF1_31kb")
+   tbl.regions <- data.frame(chrom="chr19", start=1036725, end=1068265, stringsAsFactors=FALSE)
+   motif <- as.list(query(MotifDb, c("MZF1", "sapiens"), "hocomoco"))[1]
+   m4.biostrings <- MultiMethodMotifMatcher("hg38", motif, tbl.regions, "Biostrings matchPWM", .9)
+   m4.moods <- MultiMethodMotifMatcher("hg38", motif, tbl.regions, "MOODS matchMotifs", .9)
+
+   tbl.hits.biostrings <- match(m4.biostrings)
+   tbl.hits.moods <- match(m4.moods)
+   checkTrue(nrow(tbl.hits.biostrings) > 50)
+   checkTrue(nrow(tbl.hits.moods) < 10)
+     # make sure that the moods matches are among the best reported by biostrings
+   matched.starts <- base::match(tbl.hits.moods$start, tbl.hits.biostrings$start)
+   checkTrue(all(matched.starts < 10))
+
+
+} # test_both_MZF1_31kb
 #------------------------------------------------------------------------------------------------------------------------
