@@ -11,11 +11,13 @@
                                      state="environment")
                                   )
 #------------------------------------------------------------------------------------------------------------------------
-setGeneric("addEventHandlers",  signature="obj", function(obj, session, input, output) standardGeneric("addEventHandlers"))
-setGeneric("setTF",             signature="obj", function(obj, tf) standardGeneric("setTF"))
-setGeneric("createPage",        signature="obj", function(obj) standardGeneric("createPage"))
-setGeneric("renderLogos",       signature="obj", function(obj, tfMappingOption) standardGeneric("renderLogos"))
-setGeneric("removeLogos",       signature="obj", function(obj) standardGeneric("removeLogos"))
+setGeneric("addEventHandlers",    signature="obj", function(obj, session, input, output) standardGeneric("addEventHandlers"))
+setGeneric("setTF",               signature="obj", function(obj, tf) standardGeneric("setTF"))
+setGeneric("createPage",          signature="obj", function(obj) standardGeneric("createPage"))
+setGeneric("renderLogos",         signature="obj", function(obj, tfMappingOption) standardGeneric("renderLogos"))
+setGeneric("removeLogos",         signature="obj", function(obj) standardGeneric("removeLogos"))
+setGeneric("displayPage",         signature="obj", function(obj, tf) standardGeneric("displayPage"))
+setGeneric("setGenomicRegion",    signature="obj", function(obj, tbl.regions) standardGeneric("setGenomicRegion"))
 #------------------------------------------------------------------------------------------------------------------------
 #' Create an BindingSitesManager object
 #'
@@ -36,6 +38,7 @@ BindingSitesManager <- function(organism, genome, quiet=TRUE)
 {
    state <- new.env(parent=emptyenv())
    state$TF <- NULL
+   state$regions <- data.frame()
 
    obj <- .BindingSitesManager(organism=organism, genome=genome, quiet=quiet, state=state)
 
@@ -57,6 +60,23 @@ setMethod("setTF", "BindingSitesManager",
 
           function(obj, tf) {
              obj@state$TF <- tf
+             })
+
+#------------------------------------------------------------------------------------------------------------------------
+#' specify the one or more genomic regions in which to look for binding sites
+#'
+#' @rdname setGenomicRegion
+#' @aliases setGenomicRegion
+#'
+#' @param obj An object of class BindingSitesManager
+#' @param TF character string, the transcription factor we are currently concerned with
+#'
+#' @export
+#'
+setMethod("setGenomicRegion", "BindingSitesManager",
+
+          function(obj, tbl.regions) {
+             obj@state$regions <- tbl.regions
              })
 
 #------------------------------------------------------------------------------------------------------------------------
@@ -163,6 +183,28 @@ setMethod("removeLogos", "BindingSitesManager",
        })
 
 #------------------------------------------------------------------------------------------------------------------------
+#' display the page
+#'
+#' @rdname displayPage
+#' @aliases displayPage
+#'
+#' @param obj An object of class BindingSitesManager
+#' @param tf  character string, the geneSymbol name of the transcription factor
+#'
+#' @export
+#'
+setMethod("displayPage", "BindingSitesManager",
+
+     function(obj, tf){
+         removeLogos(obj)
+         printf("tf: %s",   tf)
+         setTF(obj, tf)
+         removeUI(selector="#bindingSitesManagerPageContent", immediate=TRUE)
+         insertUI(selector="#bindingSitesManagerPage", where="afterEnd", createPage(obj), immediate=TRUE)
+         updateTabItems(obj@state$session, "sidebarMenu", select="bindingSitesManagerTab")
+         removeLogos(obj)
+         })
+#------------------------------------------------------------------------------------------------------------------------
 #' add shiny event handlers
 #'
 #' @rdname addEventHandlers
@@ -188,15 +230,17 @@ setMethod("addEventHandlers", "BindingSitesManager",
           })
 
         observeEvent(input$tfSelector, ignoreInit=TRUE, {
-           removeLogos(obj)
            tf <- input$tfSelector
            if(nchar(tf) == 0) return();
-           printf("tf: %s",   tf)
-           setTF(obj, tf)
-           removeUI(selector="#bindingSitesManagerPageContent", immediate=TRUE)
-           insertUI(selector="#bindingSitesManagerPage", where="afterEnd", createPage(obj), immediate=TRUE)
-           updateTabItems(session, "sidebarMenu", select="bindingSitesManagerTab")
-           removeLogos(obj)
+           displayPage(obj, tf)
+           # removeLogos(obj)
+           # if(nchar(tf) == 0) return();
+           # printf("tf: %s",   tf)
+           # setTF(obj, tf)
+           # removeUI(selector="#bindingSitesManagerPageContent", immediate=TRUE)
+           # insertUI(selector="#bindingSitesManagerPage", where="afterEnd", createPage(obj), immediate=TRUE)
+           # updateTabItems(session, "sidebarMenu", select="bindingSitesManagerTab")
+           # removeLogos(obj)
            })
 
         observeEvent(input$displayMotifsButton, ignoreInit=TRUE, {
@@ -211,8 +255,12 @@ setMethod("addEventHandlers", "BindingSitesManager",
         observeEvent(input$displayTrackButton, ignoreInit=TRUE, {
            motif <- isolate(input$motifChooser)
            sequenceMatchAlgorithm <- isolate(input$matchAlgorithmChooser)
+           browser()
            matchThreshold <- isolate(input$matchThresholdSlider)
-           m4 <- MultiMethodMotifMatcher(obj@genome, motif, sequenceMatchAlgorithm, matchThreshold)
+           motif.matrix <- as.list(MotifDb[motif])
+           m4 <- MultiMethodMotifMatcher(obj@genome, motif.matrix, obj@state$regions, sequenceMatchAlgorithm, matchThreshold)
+           tbl.hits <- matchMotifInSequence(m4)
+           print(tbl.hits)
            #mm <- MotifMatcher("hg38", as.list(pwm.oi), quiet=TRUE)
            # matchThreshold <- 80
            # tbl.matches <- findMatchesByChromosomalRegion(mm, tbl.regions, pwmMatchMinimumAsPercentage=matchThreshold)

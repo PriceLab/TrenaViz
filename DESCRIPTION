@@ -1,8 +1,8 @@
 Package: TrenaViz
 Type: Package
 Title: TrenaViz
-Version: 0.99.21
-Date: 2019-01-22
+Version: 0.99.22
+Date: 2019-01-24
 Author: Paul Shannon
 Maintainer: Paul Shannon <pshannon@systemsbiology.org>
 Depends: R (>= 3.4.0), igvShiny (>= 0.99.73), RColorBrewer, colourpicker, shiny, shinyjs, shinydashboard,

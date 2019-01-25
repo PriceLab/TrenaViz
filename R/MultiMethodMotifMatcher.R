@@ -17,7 +17,7 @@
                                      quiet="logical")
                                   )
 #------------------------------------------------------------------------------------------------------------------------
-setGeneric("match",  signature="obj", function(obj, session, input, output) standardGeneric("match"))
+setGeneric("matchMotifInSequence",  signature="obj", function(obj, session, input, output) standardGeneric("matchMotifInSequence"))
 #------------------------------------------------------------------------------------------------------------------------
 #' Create a MultiMethodMotifMatcher object
 #'
@@ -54,7 +54,7 @@ MultiMethodMotifMatcher <- function(genome, motifMatrix, tbl.regions, sequenceMa
 #' run the MultiMethodMotifMatcher
 #'
 #'
-#' @rdname match
+#' @rdname matchMotifInSequence
 #'
 #' @param obj A properly configured MultiMethodMotifMatching object
 #'
@@ -62,7 +62,7 @@ MultiMethodMotifMatcher <- function(genome, motifMatrix, tbl.regions, sequenceMa
 #'
 #' @export
 #'
-setMethod("match", "MultiMethodMotifMatcher",
+setMethod("matchMotifInSequence", "MultiMethodMotifMatcher",
 
     function(obj){
        if(obj@sequenceMatchAlgorithm == "Biostrings matchPWM"){

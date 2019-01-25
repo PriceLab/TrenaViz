@@ -52,7 +52,7 @@ test_biostringsAlgorithm <- function()
 {
    printf("--- test_biostringsAlgorithm")
 
-   tbl.hits.b <- match(m4.biostrings)
+   tbl.hits.b <- matchMotifInSequence(m4.biostrings)
    checkEquals(nrow(tbl.hits.b), 1)
    checkEquals(tbl.hits.b$chrom, "chr2")
    checkEquals(tbl.hits.b$start, 88875627)
@@ -68,7 +68,7 @@ test_moodsAlgorithm <- function()
 {
    print("--- test_moodsAlgorithm")
 
-   tbl.hits.m <- match(m4.moods)
+   tbl.hits.m <- matchMotifInSequence(m4.moods)
    checkEquals(nrow(tbl.hits.m), 1)
    checkEquals(tbl.hits.m$chrom, "chr2")
    checkEquals(tbl.hits.m$start, 88875627)
@@ -87,8 +87,8 @@ test_both_MZF1_31kb <- function()
    m4.biostrings <- MultiMethodMotifMatcher("hg38", motif, tbl.regions, "Biostrings matchPWM", .9)
    m4.moods <- MultiMethodMotifMatcher("hg38", motif, tbl.regions, "MOODS matchMotifs", .9)
 
-   tbl.hits.biostrings <- match(m4.biostrings)
-   tbl.hits.moods <- match(m4.moods)
+   tbl.hits.biostrings <- matchMotifInSequence(m4.biostrings)
+   tbl.hits.moods <- matchMotifInSequence(m4.moods)
    checkTrue(nrow(tbl.hits.biostrings) > 50)
    checkTrue(nrow(tbl.hits.moods) < 10)
      # make sure that the moods matches are among the best reported by biostrings

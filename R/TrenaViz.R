@@ -17,6 +17,8 @@
 #' @rdname TrenaViz
 #' @aliases TrenaViz
 #------------------------------------------------------------------------------------------------------------------------
+bsm <- BindingSitesManager("Hsapiens", "hg38")
+#------------------------------------------------------------------------------------------------------------------------
 state <- new.env(parent=emptyenv())
 state$models <- list()
 state$tbl.chipSeq <- NULL
@@ -94,29 +96,31 @@ setMethod('createUI', 'TrenaViz',
 
    function(obj){
 
+      browser()
       ui <- dashboardPage(
         dashboardHeader(title=sprintf("trena %s", getTargetGene(obj@project))),
         .createSidebar(obj),
         dashboardBody(
-           tags$head(tags$style(HTML('
-        .main-header .logo {
-          font-family: "Georgia", Times, "Times New Roman", serif;
-          font-weight: bold;
-          font-size: 24px;
-          }
-        #igvShiny{
-          background: white;
-          border: 1px solid black;
-          border-radius: 5px;
-          margin: 5px;
-          margin-right: 15px;
-          overflow: hidden;
-          }
-        #table{
-          border: 1px solid black;
-          border-radius: 5px;
-          }
-       '))),
+       #    tags$head(tags$style(HTML('
+       # .main-header .logo {
+       #   font-family: "Georgia", Times, "Times New Roman", serif;
+       #   font-weight: bold;
+       #   font-size: 24px;
+       #   }
+       # #igvShiny{
+       #   background: white;
+       #   border: 1px solid black;
+       #   border-radius: 5px;
+       #   margin: 5px;
+       #   margin-right: 15px;
+       #   overflow: hidden;
+       #   }
+       # #table{
+       #   border: 1px solid black;
+       #   border-radius: 5px;
+       #   }
+           # '))),
+
        .createBody(obj@project)),
        useShinyjs()
       ) # dashboardPage
@@ -141,6 +145,7 @@ setMethod('createServer', 'TrenaViz',
    function(obj, session, input, output){
 
       .createTrackFileUploader(session, input, output)
+      addEventHandlers(bsm, session, input, output)
 
       observeEvent(input$setOffListGeneButton, ignoreInit=TRUE, {
          newGene <- toupper(isolate(input$offListGene))
@@ -201,8 +206,11 @@ setMethod('createServer', 'TrenaViz',
 
    observeEvent(input$currentGenomicRegion, {
       new.region <- isolate(input$currentGenomicRegion)
-      #printf("new region: %s", new.region)
+      printf("new region: %s", new.region)
       state[["chromLocRegion"]] <- new.region
+      chromLoc <- trena::parseChromLocString(new.region)
+      tbl.region <- with(chromLoc, data.frame(chrom=chrom, start=start, end=end, stringsAsFactors=FALSE))
+      setGenomicRegion(bsm, tbl.region)
       })
 
    setupIgvAndTableToggling(session, input);
@@ -235,7 +243,8 @@ setMethod('createServer', 'TrenaViz',
             ), # tabItem 1
          .createBuildModelTab(project),
          .createVideoTab(),
-         .createMotifTab()
+         .createMotifTab(),
+         .createBindingSitesManagerTab()
          ) # tabItems
 
    return(body)
@@ -249,8 +258,13 @@ setMethod('createServer', 'TrenaViz',
        menuItem("IGV and Current Models", tabName = "igvAndTable"),
        menuItem("Build a new Model",      tabName = "buildModels"),
        menuItem("Introductory video",     tabName = "video"),
-       menuItem("Motifs",                 tabName = "motifTab")
+       menuItem("Motifs",                 tabName = "motifTab"),
+       menuItem("Binding Sites Mangager", tabName = "bindingSitesManagerTab")
+
       ),
+     h5("Choose TF:"),
+     selectInput("tfSelector", NULL,  c("", "HES7", "LYL1", "IRF5", "SPI1", "CEBPA", "ELK3", "RUNX1")),
+
     conditionalPanel(id="igvTableWidgets",
         condition = "input.sidebarMenu == 'igvAndTable'",
         actionButton(inputId = "igvHideButton", label = "Toggle IGV"),
@@ -364,6 +378,15 @@ setMethod('createServer', 'TrenaViz',
    return(tab)
 
 } # .createMotifTab
+#------------------------------------------------------------------------------------------------------------------------
+.createBindingSitesManagerTab <- function()
+{
+   tabItem(tabName="bindingSitesManagerTab",
+           fluidPage(id="bindingSitesManagerPage",
+                     h4("Binding Sites Manager"),
+                     fluidRow(id="bindingSitesManagerPageContent")))
+
+} # .createExperimentalTab
 #------------------------------------------------------------------------------------------------------------------------
 #' Create a runnable shiny app
 #'

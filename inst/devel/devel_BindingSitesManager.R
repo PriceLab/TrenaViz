@@ -3,7 +3,9 @@ library(shinydashboard)
 library(TrenaViz)
 library(shinyjs)
 #------------------------------------------------------------------------------------------------------------------------
-bsm <- BindingSitesManager("Hsapiens", "hg38") # , input, output)
+bsm <- BindingSitesManager("Hsapiens", "hg38")
+tbl.regions <- data.frame(chrom="chr19", start=1036002, end=1042642, stringsAsFactors=FALSE)
+setGenomicRegion(bsm, tbl.regions)
 #------------------------------------------------------------------------------------------------------------------------
 .createSidebar <- function()
 {
@@ -33,7 +35,6 @@ bsm <- BindingSitesManager("Hsapiens", "hg38") # , input, output)
            fluidPage(id="bindingSitesManagerPage",
                      h4("Binding Sites Manager"),
                      fluidRow(id="bindingSitesManagerPageContent")))
-           #createPage(bsm))
 
 } # .createExperimentalTab
 #------------------------------------------------------------------------------------------------------------------------

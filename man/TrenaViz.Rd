@@ -3,7 +3,7 @@
 \docType{data}
 \name{TrenaViz}
 \alias{TrenaViz}
-\alias{state}
+\alias{bsm}
 \title{import shiny
 import shinydashboard
 import shinyjs
@@ -18,9 +18,9 @@ import colourpicker
 import later
 import MotifDb
 import ggpseqlogo}
-\format{An object of class \code{environment} of length 3.}
+\format{An object of class \code{BindingSitesManager} of length 1.}
 \usage{
-state
+bsm
 
 TrenaViz(projectName, quiet = TRUE)
 }
