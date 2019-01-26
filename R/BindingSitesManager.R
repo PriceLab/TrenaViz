@@ -58,9 +58,9 @@ BindingSitesManager <- function(organism, genome, quiet=TRUE)
 #'
 setMethod("setTF", "BindingSitesManager",
 
-          function(obj, tf) {
-             obj@state$TF <- tf
-             })
+     function(obj, tf) {
+        obj@state$TF <- tf
+        })
 
 #------------------------------------------------------------------------------------------------------------------------
 #' specify the one or more genomic regions in which to look for binding sites
@@ -94,10 +94,10 @@ setMethod("createPage", "BindingSitesManager",
      function(obj) {
         div(id="bindingSitesManagerPageContent",
             fluidRow(
-               column(1, offset=4, h2(obj@state$TF))),
+               column(6, offset=2, h3(sprintf("Binding Sites for %s", obj@state$TF)))),
             br(),
             fluidRow(
-               column(2, offset=1,
+               column(3,
                       radioButtons("tfMotifMappingOptions", "TF-Motif Mapping Options",
                                   c("MotifDb", "TFClass", "both"), selected="MotifDb", inline=TRUE),
                       actionButton("displayMotifsButton", "Display Motifs")),
@@ -108,16 +108,17 @@ setMethod("createPage", "BindingSitesManager",
                                   selected="MOODS matchMotifs",
                                   selectize=FALSE)),
 
-               column(3,
+               column(4,
                       conditionalPanel(
                          condition = "input.matchAlgorithmChooser == 'Biostrings matchPWM'",
-                         sliderInput("matchThresholdSlider", "Match Threshold (0-1): ", min=0, max=1, value=0.9)),
+                         sliderInput("biostringsMatchThresholdSlider", "Match Threshold (0-1): ", min=0, max=1, value=0.9)),
                       conditionalPanel(
                          condition = "input.matchAlgorithmChooser == 'MOODS matchMotifs'",
-                         sliderInput("matchThresholdSlider", "Match Threshold: (-log10(pVal))", min=0, max=10, value=3)),
-                      fluidRow(actionButton("findMatchesButton", "Find Matches"),
-                               actionButton("displayTrackButton", "Display Track")))
-               ),
+                         sliderInput("moodsMatchThresholdSlider", "Match Threshold: (-log10(pVal))", min=0.0, max=8.0, value=4.5)),
+                      fluidRow(column(width=3, actionButton("findMatchesButton", "Find Matches")),
+                               column(width=3, offset=2, verbatimTextOutput(outputId="motifMatchCountDisplay")),
+                               column(width=3, actionButton("displayTrackButton", "Display Track")))
+                      )), # column3, fluidRow
             fluidRow(id="motifPlottingRow",
                      plotOutput(outputId="motifRenderingPanel", height="1000px"))
             )
@@ -165,7 +166,7 @@ setMethod("renderLogos", "BindingSitesManager",
           }
       shinyjs::enable("motifChooser")
       updateSelectInput(obj@state$session, "motifChooser", choices=pwm.names.unique, selected=character(0))
-      shinyjs::enable("displayTrackButton")
+      #shinyjs::enable("displayTrackButton")
       all.pwms <- MotifDb[pwm.names.unique]
       printf("launching ggseqlogo, %d matrices", length(all.pwms))
       show("BindingSitesManager: renderLogos, about to call ggseqlogo")
@@ -185,8 +186,9 @@ setMethod("renderLogos", "BindingSitesManager",
 setMethod("removeLogos", "BindingSitesManager",
 
     function(obj){
-       shinyjs::enable("motifChooser")
-       shinyjs::disable("displayTrackButton")
+       #shinyjs::enable("motifChooser")
+       #shinyjs::disable("findMatchesButton")
+       #shinyjs::disable("displayTrackButton")
        removeUI(selector="#motifRenderingPanel > img", immediate=TRUE)
        })
 
@@ -205,13 +207,14 @@ setMethod("displayPage", "BindingSitesManager",
 
      function(obj, tf){
          removeLogos(obj)
-         printf("tf: %s",   tf)
+         printf("BindingSitesManager displayPage, tf: %s",   tf)
          setTF(obj, tf)
          removeUI(selector="#bindingSitesManagerPageContent", immediate=TRUE)
          insertUI(selector="#bindingSitesManagerPage", where="afterEnd", createPage(obj), immediate=TRUE)
          updateTabItems(obj@state$session, "sidebarMenu", select="bindingSitesManagerTab")
          removeLogos(obj)
          })
+
 #------------------------------------------------------------------------------------------------------------------------
 #' add shiny event handlers
 #'
@@ -233,25 +236,22 @@ setMethod("addEventHandlers", "BindingSitesManager",
        obj@state$input <- input
        obj@state$output <- output
 
-       observeEvent(input$clearLogosButton, ignoreInit=TRUE, {
-          removeLogos(obj)
+       observeEvent(input$tfSelector, ignoreInit=TRUE, {
+          tf <- input$tfSelector
+          if(nchar(tf) == 0) return();
+          displayPage(obj, tf)
+          # removeLogos(obj)
+          # if(nchar(tf) == 0) return();
+          # printf("tf: %s",   tf)
+          # setTF(obj, tf)
+          # removeUI(selector="#bindingSitesManagerPageContent", immediate=TRUE)
+          # insertUI(selector="#bindingSitesManagerPage", where="afterEnd", createPage(obj), immediate=TRUE)
+          # updateTabItems(session, "sidebarMenu", select="bindingSitesManagerTab")
+          # removeLogos(obj)
           })
 
-        observeEvent(input$tfSelector, ignoreInit=TRUE, {
-           tf <- input$tfSelector
-           if(nchar(tf) == 0) return();
-           displayPage(obj, tf)
-           # removeLogos(obj)
-           # if(nchar(tf) == 0) return();
-           # printf("tf: %s",   tf)
-           # setTF(obj, tf)
-           # removeUI(selector="#bindingSitesManagerPageContent", immediate=TRUE)
-           # insertUI(selector="#bindingSitesManagerPage", where="afterEnd", createPage(obj), immediate=TRUE)
-           # updateTabItems(session, "sidebarMenu", select="bindingSitesManagerTab")
-           # removeLogos(obj)
-           })
-
         observeEvent(input$displayMotifsButton, ignoreInit=TRUE, {
+            printf("-- about to enable and disable")
             output$motifRenderingPanel <- renderPlot({
                printf("observing displayMotifsButton")
                tfMapping <- isolate(input$tfMotifMappingOptions)
@@ -263,11 +263,14 @@ setMethod("addEventHandlers", "BindingSitesManager",
         observeEvent(input$findMatchesButton, ignoreInit=TRUE, {
            motif <- isolate(input$motifChooser)
            sequenceMatchAlgorithm <- isolate(input$matchAlgorithmChooser)
-           matchThreshold <- isolate(input$matchThresholdSlider)
+           matchThreshold <- isolate(input$biostringsMatchThresholdSlider)
+           if(sequenceMatchAlgorithm == "MOODS matchMotifs")
+              matchThreshold <- isolate(input$moodsMatchThresholdSlider)
            motif.matrix <- as.list(MotifDb[motif])
            m4 <- MultiMethodMotifMatcher(obj@genome, motif.matrix, obj@state$regions, sequenceMatchAlgorithm, matchThreshold)
            tbl.hits <- matchMotifInSequence(m4)
-           print(tbl.hits)
+           rowCountAsString <- sprintf("%d", nrow(tbl.hits))
+           output$motifMatchCountDisplay <- renderText({rowCountAsString})
            #mm <- MotifMatcher("hg38", as.list(pwm.oi), quiet=TRUE)
            # matchThreshold <- 80
            # tbl.matches <- findMatchesByChromosomalRegion(mm, tbl.regions, pwmMatchMinimumAsPercentage=matchThreshold)
@@ -281,6 +284,20 @@ setMethod("addEventHandlers", "BindingSitesManager",
            #    min=scale.bottom, max=1.0)
            #    }
            })
+
+        observeEvent(input$motifChooser, ignoreInit=FALSE, {
+           currentValue <- input$motifChooser
+           printf("observer detects motifChooser event: '%s'", currentValue)
+           if(nchar(currentValue) == 0){
+              shinyjs::disable("findMatchesButton")
+              shinyjs::disable("displayTrackButton")
+              }
+           else{
+              shinyjs::enable("findMatchesButton")
+              shinyjs::enable("displayTrackButton")
+              }
+           })
+
         observeEvent(input$displayTrackButton, ignoreInit=TRUE, {
             printf("display tracks")
             })

@@ -33,7 +33,6 @@ setGenomicRegion(bsm, tbl.regions)
 {
    tabItem(tabName="bindingSitesManagerTab",
            fluidPage(id="bindingSitesManagerPage",
-                     h4("Binding Sites Manager"),
                      fluidRow(id="bindingSitesManagerPageContent")))
 
 } # .createExperimentalTab
