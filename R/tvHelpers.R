@@ -561,7 +561,6 @@ dispatch.rowClickInModelTable <- function(trenaProject, session, input, output, 
       } # if footprints
 
    if(action.name == "Binding Sites"){
-      browser()
       displayPage(bsm, tf.name)
       # dialog <- bindingSitesOptionsDialog(tf.name)
       # showModal(dialog)

@@ -96,7 +96,6 @@ setMethod('createUI', 'TrenaViz',
 
    function(obj){
 
-      browser()
       ui <- dashboardPage(
         dashboardHeader(title=sprintf("trena %s", getTargetGene(obj@project))),
         .createSidebar(obj),

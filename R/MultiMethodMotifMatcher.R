@@ -65,12 +65,17 @@ MultiMethodMotifMatcher <- function(genome, motifMatrix, tbl.regions, sequenceMa
 setMethod("matchMotifInSequence", "MultiMethodMotifMatcher",
 
     function(obj){
+       widths <- with(obj@regions, 1 + end - start)
+       total.bases <- sum(widths)
        if(obj@sequenceMatchAlgorithm == "Biostrings matchPWM"){
           motifMatcher <- MotifMatcher(genomeName=obj@genome, pfms=obj@motifMatrix, quiet=obj@quiet)
           matchThreshold <- as.integer(100 * obj@matchThreshold)
           tbl.out <- findMatchesByChromosomalRegion(motifMatcher, obj@regions, pwmMatchMinimumAsPercentage=matchThreshold)
+          if(!obj@quiet){
+             message(sprintf("Biostrings matchPWM on %d bases found %d hits", total.bases, nrow(tbl.out)))
+             }
           if(nrow(tbl.out) == 0)
-             return(data.frame)
+             return(data.frame())
           tbl.out <- tbl.out[, c("chrom", "motifStart", "motifEnd", "strand", "motifScore")]
           tbl.out$width <- with(tbl.out, 1 + motifEnd - motifStart)
           colnames(tbl.out) <- c("chrom", "start", "end", "strand", "score", "width")
@@ -80,7 +85,12 @@ setMethod("matchMotifInSequence", "MultiMethodMotifMatcher",
        if(obj@sequenceMatchAlgorithm == "MOODS matchMotifs"){
          motif.tfbs <- convert_motifs(obj@motifMatrix[[1]], "TFBSTools-PWMatrix")
          gr.regions <- GRanges(obj@regions)
-         tbl.out <- as.data.frame(matchMotifs(motif.tfbs, gr.regions, genome="hg38", out="positions"))
+         matchThreshold = 1/10^(obj@matchThreshold)  # 1/(10^obj@matchThreshold)   # restart here!
+         tbl.out <- as.data.frame(matchMotifs(motif.tfbs, gr.regions, genome="hg38", out="positions", p.cutoff=1e-3))
+         if(!obj@quiet){
+            message(sprintf("MOODS matchMotifs %d bases found %d hits", total.bases, nrow(tbl.out)))
+            }
+
          if(nrow(tbl.out) == 0)
             return(data.frame())
          columns.to.remove <- grep("group", colnames(tbl.out))

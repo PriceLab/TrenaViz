@@ -94,8 +94,7 @@ setMethod("createPage", "BindingSitesManager",
      function(obj) {
         div(id="bindingSitesManagerPageContent",
             fluidRow(
-               column(1, offset=4, h2("CEBPA"))),
-               #column(1, offset=4, h2(obj@state$TF))),
+               column(1, offset=4, h2(obj@state$TF))),
             br(),
             fluidRow(
                column(2, offset=1,
@@ -105,10 +104,19 @@ setMethod("createPage", "BindingSitesManager",
                column(3,
                       selectInput("motifChooser", "Choose Motif", c()),
                       selectInput("matchAlgorithmChooser", "Choose Match Algorithm",
-                                  c("Biostrings matchPWM", "MOODS matchMotifs"))),
+                                  c("Biostrings matchPWM", "MOODS matchMotifs"),
+                                  selected="MOODS matchMotifs",
+                                  selectize=FALSE)),
 
-               column(3, sliderInput("matchThresholdSlider", "Match Threshold: ", min=0, max=1, value=0.9),
-                      actionButton("displayTrackButton", "Display Track"))
+               column(3,
+                      conditionalPanel(
+                         condition = "input.matchAlgorithmChooser == 'Biostrings matchPWM'",
+                         sliderInput("matchThresholdSlider", "Match Threshold (0-1): ", min=0, max=1, value=0.9)),
+                      conditionalPanel(
+                         condition = "input.matchAlgorithmChooser == 'MOODS matchMotifs'",
+                         sliderInput("matchThresholdSlider", "Match Threshold: (-log10(pVal))", min=0, max=10, value=3)),
+                      fluidRow(actionButton("findMatchesButton", "Find Matches"),
+                               actionButton("displayTrackButton", "Display Track")))
                ),
             fluidRow(id="motifPlottingRow",
                      plotOutput(outputId="motifRenderingPanel", height="1000px"))
@@ -252,10 +260,9 @@ setMethod("addEventHandlers", "BindingSitesManager",
                })
           })
 
-        observeEvent(input$displayTrackButton, ignoreInit=TRUE, {
+        observeEvent(input$findMatchesButton, ignoreInit=TRUE, {
            motif <- isolate(input$motifChooser)
            sequenceMatchAlgorithm <- isolate(input$matchAlgorithmChooser)
-           browser()
            matchThreshold <- isolate(input$matchThresholdSlider)
            motif.matrix <- as.list(MotifDb[motif])
            m4 <- MultiMethodMotifMatcher(obj@genome, motif.matrix, obj@state$regions, sequenceMatchAlgorithm, matchThreshold)
@@ -274,7 +281,9 @@ setMethod("addEventHandlers", "BindingSitesManager",
            #    min=scale.bottom, max=1.0)
            #    }
            })
-
+        observeEvent(input$displayTrackButton, ignoreInit=TRUE, {
+            printf("display tracks")
+            })
 
      }) # addEventHandlers
 
