@@ -205,7 +205,7 @@ setMethod('createServer', 'TrenaViz',
 
    observeEvent(input$currentGenomicRegion, {
       new.region <- isolate(input$currentGenomicRegion)
-      printf("new region: %s", new.region)
+      #printf("new region: %s", new.region)
       state[["chromLocRegion"]] <- new.region
       chromLoc <- trena::parseChromLocString(new.region)
       tbl.region <- with(chromLoc, data.frame(chrom=chrom, start=start, end=end, stringsAsFactors=FALSE))

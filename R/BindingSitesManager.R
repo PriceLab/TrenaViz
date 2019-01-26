@@ -164,7 +164,7 @@ setMethod("renderLogos", "BindingSitesManager",
           showNotification("No motifs found with specified mapping")
           return()
           }
-      shinyjs::enable("motifChooser")
+      printf("about to update motifChooser selectInput with %d motif names", length(pwm.names.unique))
       updateSelectInput(obj@state$session, "motifChooser", choices=pwm.names.unique, selected=character(0))
       #shinyjs::enable("displayTrackButton")
       all.pwms <- MotifDb[pwm.names.unique]
