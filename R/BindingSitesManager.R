@@ -251,14 +251,14 @@ setMethod("addEventHandlers", "BindingSitesManager",
           })
 
         observeEvent(input$displayMotifsButton, ignoreInit=TRUE, {
-            printf("-- about to enable and disable")
-            output$motifRenderingPanel <- renderPlot({
-               printf("observing displayMotifsButton")
-               tfMapping <- isolate(input$tfMotifMappingOptions)
-               xyz <- "just before render logos"
-               renderLogos(obj, tfMapping)
-               })
-          })
+           printf("-- about to enable and disable")
+           output$motifRenderingPanel <- renderPlot({
+              printf("observing displayMotifsButton")
+              tfMapping <- isolate(input$tfMotifMappingOptions)
+              xyz <- "just before render logos"
+              renderLogos(obj, tfMapping)
+              })
+           })
 
         observeEvent(input$findMatchesButton, ignoreInit=TRUE, {
            motif <- isolate(input$motifChooser)
@@ -271,6 +271,11 @@ setMethod("addEventHandlers", "BindingSitesManager",
            tbl.hits <- matchMotifInSequence(m4)
            rowCountAsString <- sprintf("%d", nrow(tbl.hits))
            output$motifMatchCountDisplay <- renderText({rowCountAsString})
+           if(nrow(tbl.hits) == 0)
+              shinyjs::disable("displayTrackButton")
+           else
+              shinyjs::enable("displayTrackButton")
+           obj@state$motifHits <- tbl.hits
            #mm <- MotifMatcher("hg38", as.list(pwm.oi), quiet=TRUE)
            # matchThreshold <- 80
            # tbl.matches <- findMatchesByChromosomalRegion(mm, tbl.regions, pwmMatchMinimumAsPercentage=matchThreshold)
@@ -299,8 +304,18 @@ setMethod("addEventHandlers", "BindingSitesManager",
            })
 
         observeEvent(input$displayTrackButton, ignoreInit=TRUE, {
-            printf("display tracks")
-            })
+           printf("display tracks")
+           next.color <- "purple"
+           print(head(obj@state$motifHits))
+           tbl.bg <- obj@state$motifHits[, c("chrom", "start", "end", "score")]
+           #tbl.bg$score <- as.character(tbl.bg$score)
+           #tbl.bg$score <- as.integer(tbl.bg$score)
+           print(tbl.bg)
+           #loadBedTrack(session, sprintf("Bi-%s", obj@state$TF), tbl.bg, color=next.color, trackHeight=50)
+           updateTabItems(session, "sidebarMenu", select="igvAndTable")
+           later(function(){loadBedGraphTrack(obj@state$session, obj@state$TF, tbl.bg,
+                                              color=next.color, trackHeight=50, autoscale=TRUE, quiet=FALSE)}, 1)
+           })
 
      }) # addEventHandlers
 

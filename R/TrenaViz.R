@@ -100,30 +100,12 @@ setMethod('createUI', 'TrenaViz',
         dashboardHeader(title=sprintf("trena %s", getTargetGene(obj@project))),
         .createSidebar(obj),
         dashboardBody(
-       #    tags$head(tags$style(HTML('
-       # .main-header .logo {
-       #   font-family: "Georgia", Times, "Times New Roman", serif;
-       #   font-weight: bold;
-       #   font-size: 24px;
-       #   }
-       # #igvShiny{
-       #   background: white;
-       #   border: 1px solid black;
-       #   border-radius: 5px;
-       #   margin: 5px;
-       #   margin-right: 15px;
-       #   overflow: hidden;
-       #   }
-       # #table{
-       #   border: 1px solid black;
-       #   border-radius: 5px;
-       #   }
-           # '))),
-
+           includeCSS("www/custom.css"),
        .createBody(obj@project)),
        useShinyjs()
-      ) # dashboardPage
-     return(ui)
+       ) # dashboardPage
+
+    return(ui)
    })
 
 #------------------------------------------------------------------------------------------------------------------------
