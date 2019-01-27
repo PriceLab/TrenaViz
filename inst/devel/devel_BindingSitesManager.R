@@ -40,6 +40,8 @@ setGenomicRegion(bsm, tbl.regions)
 .createBody <- function()
 {
    dashboardBody(
+      includeCSS("../unitTests/www/custom.css"),
+
       tabItems(
          .createMainTab(),
          .createBindingSitesManagerTab()

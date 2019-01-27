@@ -111,12 +111,15 @@ setMethod("createPage", "BindingSitesManager",
                column(4,
                       conditionalPanel(
                          condition = "input.matchAlgorithmChooser == 'Biostrings matchPWM'",
-                         sliderInput("biostringsMatchThresholdSlider", "Match Threshold (0-1): ", min=0, max=1, value=0.9)),
+                         sliderInput("biostringsMatchThresholdSlider", "Match Threshold (0-1): ",
+                                     min=0, max=1, value=0.9, step=0.01)),
                       conditionalPanel(
                          condition = "input.matchAlgorithmChooser == 'MOODS matchMotifs'",
-                         sliderInput("moodsMatchThresholdSlider", "Match Threshold: (-log10(pVal))", min=0.0, max=8.0, value=4.5)),
+                         sliderInput("moodsMatchThresholdSlider", "Match Threshold: (-log10(pVal))",
+                                     min=0.0, max=8.0, value=4.0, step=0.1)),
                       fluidRow(column(width=3, actionButton("findMatchesButton", "Find Matches")),
-                               column(width=3, offset=2, verbatimTextOutput(outputId="motifMatchCountDisplay")),
+                               column(width=3, offset=2, textOutput(outputId="motifMatchCountDisplay")),
+                               #column(width=3, offset=2, verbatimTextOutput(outputId="motifMatchCountDisplay", placeholder=TRUE)),
                                column(width=3, actionButton("displayTrackButton", "Display Track")))
                       )), # column3, fluidRow
             fluidRow(id="motifPlottingRow",
@@ -208,6 +211,7 @@ setMethod("displayPage", "BindingSitesManager",
      function(obj, tf){
          removeLogos(obj)
          printf("BindingSitesManager displayPage, tf: %s",   tf)
+         #browser()
          setTF(obj, tf)
          removeUI(selector="#bindingSitesManagerPageContent", immediate=TRUE)
          insertUI(selector="#bindingSitesManagerPage", where="afterEnd", createPage(obj), immediate=TRUE)
