@@ -41,7 +41,6 @@ setGenomicRegion(bsm, tbl.regions)
 {
    dashboardBody(
       includeCSS("../unitTests/www/custom.css"),
-
       tabItems(
          .createMainTab(),
          .createBindingSitesManagerTab()

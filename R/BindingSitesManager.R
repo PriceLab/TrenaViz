@@ -3,6 +3,7 @@
 #' @rdname BindingSitesManager
 #' @aliases BindingSitesManager
 #------------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------------
 .BindingSitesManager <- setClass ("BindingSitesManager",
                                   representation = representation(
                                      organism="character",
@@ -91,16 +92,20 @@ setMethod("setGenomicRegion", "BindingSitesManager",
 #'
 setMethod("createPage", "BindingSitesManager",
 
-     function(obj) {
-        div(id="bindingSitesManagerPageContent",
+          function(obj) {
+            div(id="bindingSitesManagerPageContent",
+            extendShinyjs(script=system.file(package="TrenaViz", "js", "bindingSitesManager.js")),
             fluidRow(
-               column(6, offset=2, h3(sprintf("Binding Sites for %s", obj@state$TF)))),
+               column(6, offset=2, h3(id="bindingSitesManagerPageTitle",
+                                      sprintf("Explore Binding Sites for %s", obj@state$TF)))),
             br(),
             fluidRow(
                column(3,
                       radioButtons("tfMotifMappingOptions", "TF-Motif Mapping Options",
                                   c("MotifDb", "TFClass", "both"), selected="MotifDb", inline=TRUE),
-                      actionButton("displayMotifsButton", "Display Motifs")),
+                      actionButton("displayMotifsButton", "Display Motifs"),
+                      br(),
+                      textInput("textInput_exploreAnotherTF", label="Explore another TF:")),
                column(3,
                       selectInput("motifChooser", "Choose Motif", c()),
                       selectInput("matchAlgorithmChooser", "Choose Match Algorithm",
@@ -217,6 +222,10 @@ setMethod("displayPage", "BindingSitesManager",
          insertUI(selector="#bindingSitesManagerPage", where="afterEnd", createPage(obj), immediate=TRUE)
          updateTabItems(obj@state$session, "sidebarMenu", select="bindingSitesManagerTab")
          removeLogos(obj)
+         js$installReturnKeyHandlers()
+         #printf("about to go red")
+         #js$pageRed()
+         #printf("after going red")
          })
 
 #------------------------------------------------------------------------------------------------------------------------
@@ -255,6 +264,8 @@ setMethod("addEventHandlers", "BindingSitesManager",
           })
 
         observeEvent(input$displayMotifsButton, ignoreInit=TRUE, {
+           #js$installReturnHandler()
+           #js$pageRed()
            printf("-- about to enable and disable")
            output$motifRenderingPanel <- renderPlot({
               printf("observing displayMotifsButton")
@@ -263,6 +274,14 @@ setMethod("addEventHandlers", "BindingSitesManager",
               renderLogos(obj, tfMapping)
               })
            })
+
+        observeEvent(input$textInput_exploreAnotherTF_widget_returnKey, {
+           new.tf <- isolate(input$textInput_exploreAnotherTF)
+           printf("explore this new TF: %s", new.tf)
+           setTF(obj, new.tf)
+           js$setBindingSitesManagerPageTitle(new.tf)  # todo: move this to setTF?
+           })
+
 
         observeEvent(input$findMatchesButton, ignoreInit=TRUE, {
            motif <- isolate(input$motifChooser)
