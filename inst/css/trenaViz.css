@@ -1,0 +1,31 @@
+.main-header .logo {
+  font-family: "Georgia", Times, "Times New Roman", serif;
+  font-weight: bold;
+  font-size: 24px;
+}
+
+#igvShiny{
+  background: white;
+  border: 1px solid black;
+  border-radius: 5px;
+  margin: 5px;
+  margin-right: 15px;
+  overflow: hidden;
+}
+
+#table{
+  border: 1px solid black;
+  border-radius: 5px;
+  }
+
+#motifMatchCountDisplay{
+  text-align: center;
+  background: white;
+  border: 1px solid black;
+  border-radius: 5px;
+  height: 30px;
+  width: 50px;
+  font-size: 18px;
+  font-weight: bold;
+  }
+

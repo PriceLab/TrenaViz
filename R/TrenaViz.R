@@ -100,9 +100,10 @@ setMethod('createUI', 'TrenaViz',
         dashboardHeader(title=sprintf("trena %s", getTargetGene(obj@project))),
         .createSidebar(obj),
         dashboardBody(
-           includeCSS("www/custom.css"),
-       .createBody(obj@project)),
-       useShinyjs()
+           includeCSS(system.file(package="TrenaViz", "css", "trenaViz.css")),
+           useShinyjs(),
+           extendShinyjs(script=system.file(package="TrenaViz", "js", "trenaViz.js")),
+          .createBody(obj@project))
        ) # dashboardPage
 
     return(ui)
@@ -127,6 +128,24 @@ setMethod('createServer', 'TrenaViz',
 
       .createTrackFileUploader(session, input, output)
       addEventHandlers(bsm, session, input, output)
+
+      observeEvent(input$textInput_offListGene_widget_returnKey, ignoreInit=TRUE, {
+         newGene <- toupper(isolate(input$offListGene))
+         legit <- recognizedGene(obj@project, newGene)
+         if(!legit){
+            msg <- sprintf("'%s' not found in current datasets.", newGene)
+            showModal(modalDialog(title="gene nomination error", msg))
+            }
+         if(legit){
+            shinyjs::html(selector=".logo", html=sprintf("trena %s", newGene), add=FALSE)
+            setTargetGene(obj@project, newGene)
+            showGenomicRegion(session, getGeneRegion(obj@project, flankingPercent=20))
+            state$tbl.enhancers <- getEnhancers(obj@project)
+            state$tbl.dhs <- getEncodeDHS(obj@project)
+            state$tbl.transcripts <- getTranscriptsTable(obj@project)
+            }
+         })
+
 
       observeEvent(input$setOffListGeneButton, ignoreInit=TRUE, {
          newGene <- toupper(isolate(input$offListGene))
@@ -243,8 +262,8 @@ setMethod('createServer', 'TrenaViz',
        menuItem("Binding Sites Mangager", tabName = "bindingSitesManagerTab")
 
       ),
-     h5("Choose TF:"),
-     selectInput("tfSelector", NULL,  c("", "HES7", "LYL1", "IRF5", "SPI1", "CEBPA", "ELK3", "RUNX1")),
+     #h5("Choose TF:"),
+     #selectInput("tfSelector", NULL,  c("", "HES7", "LYL1", "IRF5", "SPI1", "CEBPA", "ELK3", "RUNX1")),
 
     conditionalPanel(id="igvTableWidgets",
         condition = "input.sidebarMenu == 'igvAndTable'",
@@ -252,9 +271,9 @@ setMethod('createServer', 'TrenaViz',
         actionButton(inputId = "tableHideButton", label = "Toggle table"),
         selectInput("chooseGeneFromList", "Choose Gene From List:", c("", getSupportedGenes(obj@project))),
         # div(style="display: inline-block;vertical-align:top; width:100px; margin:0px; !important;",
-        textInput("offListGene", label=NULL, placeholder="enter off-list gene here"),
+        textInput("textInput_offListGene", label="Enter off-list gene"), # , placeholder="enter off-list gene here"),
         #div(style="display: inline-block;vertical-align:top; width: 40px; margin-left:0px; margin-top:8px; !important;",
-        actionButton(inputId="setOffListGeneButton", label="Set off-list gene"),
+        #actionButton(inputId="setOffListGeneButton", label="Set off-list gene"),
         selectInput("addTrack", "Add Built-in Track:", .additionalTracksOnOffer(obj)),
         actionButton(inputId = "addTrackFromFileButton", label="Add Track from File..."),
         selectInput("displayGenomicRegion", "Display Genomic Region:",

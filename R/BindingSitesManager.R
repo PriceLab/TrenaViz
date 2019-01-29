@@ -3,7 +3,6 @@
 #' @rdname BindingSitesManager
 #' @aliases BindingSitesManager
 #------------------------------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------------------------------
 .BindingSitesManager <- setClass ("BindingSitesManager",
                                   representation = representation(
                                      organism="character",
@@ -77,6 +76,8 @@ setMethod("setTF", "BindingSitesManager",
 setMethod("setGenomicRegion", "BindingSitesManager",
 
           function(obj, tbl.regions) {
+             printf("--- BindingSitesManager, new genomic region")
+             print(tbl.regions)
              obj@state$regions <- tbl.regions
              })
 
@@ -123,7 +124,7 @@ setMethod("createPage", "BindingSitesManager",
                          sliderInput("moodsMatchThresholdSlider", "Match Threshold: (-log10(pVal))",
                                      min=0.0, max=8.0, value=4.0, step=0.1)),
                       fluidRow(column(width=3, actionButton("findMatchesButton", "Find Matches")),
-                               column(width=3, offset=2, textOutput(outputId="motifMatchCountDisplay")),
+                               column(width=2, offset=0, textOutput(outputId="motifMatchCountDisplay")),
                                #column(width=3, offset=2, verbatimTextOutput(outputId="motifMatchCountDisplay", placeholder=TRUE)),
                                column(width=3, actionButton("displayTrackButton", "Display Track")))
                       )), # column3, fluidRow
@@ -285,14 +286,21 @@ setMethod("addEventHandlers", "BindingSitesManager",
 
         observeEvent(input$findMatchesButton, ignoreInit=TRUE, {
            motif <- isolate(input$motifChooser)
+           print(obj@state$regions)
+           output$motifMatchCountDisplay <- renderText({"   "})
            sequenceMatchAlgorithm <- isolate(input$matchAlgorithmChooser)
            matchThreshold <- isolate(input$biostringsMatchThresholdSlider)
            if(sequenceMatchAlgorithm == "MOODS matchMotifs")
               matchThreshold <- isolate(input$moodsMatchThresholdSlider)
            motif.matrix <- as.list(MotifDb[motif])
+           printf("--- matching motif against current sequence")
+           printf("    %s", sequenceMatchAlgorithm)
+           printf("    %f", matchThreshold)
+           printf("    %s", motif)
            m4 <- MultiMethodMotifMatcher(obj@genome, motif.matrix, obj@state$regions, sequenceMatchAlgorithm, matchThreshold)
            tbl.hits <- matchMotifInSequence(m4)
            rowCountAsString <- sprintf("%d", nrow(tbl.hits))
+           printf("hits: %s", rowCountAsString)
            output$motifMatchCountDisplay <- renderText({rowCountAsString})
            if(nrow(tbl.hits) == 0)
               shinyjs::disable("displayTrackButton")

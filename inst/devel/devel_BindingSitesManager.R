@@ -4,7 +4,7 @@ library(TrenaViz)
 library(shinyjs)
 #------------------------------------------------------------------------------------------------------------------------
 bsm <- BindingSitesManager("Hsapiens", "hg38")
-tbl.regions <- data.frame(chrom="chr19", start=1036002, end=1042642, stringsAsFactors=FALSE)
+tbl.regions <- data.frame(chrom="chr19", start=1036002, end=1142642, stringsAsFactors=FALSE)
 setGenomicRegion(bsm, tbl.regions)
 #------------------------------------------------------------------------------------------------------------------------
 .createSidebar <- function()
@@ -40,7 +40,7 @@ setGenomicRegion(bsm, tbl.regions)
 .createBody <- function()
 {
    dashboardBody(
-      includeCSS("../unitTests/www/custom.css"),
+      includeCSS(system.file(package="TrenaViz", "css", "trenaViz.css")),
       tabItems(
          .createMainTab(),
          .createBindingSitesManagerTab()

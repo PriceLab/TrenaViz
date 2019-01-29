@@ -176,8 +176,6 @@ displayTrack <- function(trenaProject, session, trackName)
          tbl.gh <- get(load(f))
          tbl.ghSub <- subset(tbl.gh, geneSymbol == targetGene)
          loadBedGraphTrack(session, "GeneHancer", tbl.ghSub[, c(1:3,5)], color="maroon", autoscale=FALSE, min=0, max=50)
-         browser()
-         xyz <- 99
          } # genehancer
       return()
       } # if trackName in dataManifest
