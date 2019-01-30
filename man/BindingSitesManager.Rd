@@ -6,7 +6,7 @@
 \alias{.BindingSitesManager}
 \title{import shiny}
 \usage{
-BindingSitesManager(organism, genome, quiet = TRUE)
+BindingSitesManager(organism, genome, initialGenomicRegion, quiet = TRUE)
 }
 \arguments{
 \item{organism}{A character string, one of the supported species names:  hsapiens, mmuscuulus}

@@ -6,7 +6,7 @@
 \alias{setGenomicRegion}
 \title{specify the one or more genomic regions in which to look for binding sites}
 \usage{
-\S4method{setGenomicRegion}{BindingSitesManager}(obj, tbl.regions)
+\S4method{setGenomicRegion}{BindingSitesManager}(obj, tbl.region)
 }
 \arguments{
 \item{obj}{An object of class BindingSitesManager}

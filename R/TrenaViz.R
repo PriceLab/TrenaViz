@@ -17,7 +17,9 @@
 #' @rdname TrenaViz
 #' @aliases TrenaViz
 #------------------------------------------------------------------------------------------------------------------------
-bsm <- BindingSitesManager("Hsapiens", "hg38")
+tbl.region <- data.frame(chrom="chr19", start=1036002, end=1142642, stringsAsFactors=FALSE)
+bsm <- BindingSitesManager("Hsapiens", "hg38", tbl.region)
+genomicRegionString <- "" #with(tbl.regions, sprintf("%s:%d-%d", chrom, start, end))
 #------------------------------------------------------------------------------------------------------------------------
 state <- new.env(parent=emptyenv())
 state$models <- list()
@@ -103,6 +105,7 @@ setMethod('createUI', 'TrenaViz',
            includeCSS(system.file(package="TrenaViz", "css", "trenaViz.css")),
            useShinyjs(),
            extendShinyjs(script=system.file(package="TrenaViz", "js", "trenaViz.js")),
+           extendShinyjs(script=system.file(package="TrenaViz", "js", "bindingSitesManager.js")),
           .createBody(obj@project))
        ) # dashboardPage
 
@@ -383,8 +386,10 @@ setMethod('createServer', 'TrenaViz',
 {
    tabItem(tabName="bindingSitesManagerTab",
            fluidPage(id="bindingSitesManagerPage",
-                     h3(id="bindingSiteManagerTitle", "Explore Binding Sites"),
-                     textInput("textInput_exploreAnotherTF", label="Specify New TF:"),
+                     h3(id="bindingSitesManager_title", "Explore Binding Sites"),
+                     h4(id="bindingSitesManager_currentTF", sprintf("TF: %s", "none yet specified")),
+                     h4(id="bindingSitesManager_currentGenomicRegion", genomicRegionString),
+                     textInput("textInput_exploreAnotherTF", label="Specify a new TF:"),
                      fluidRow(id="bindingSitesManagerPageContent")))
 
 } # .createExperimentalTab

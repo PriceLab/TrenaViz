@@ -17,7 +17,7 @@ setGeneric("createPage",          signature="obj", function(obj) standardGeneric
 setGeneric("renderLogos",         signature="obj", function(obj, tfMappingOption) standardGeneric("renderLogos"))
 setGeneric("removeLogos",         signature="obj", function(obj) standardGeneric("removeLogos"))
 setGeneric("displayPage",         signature="obj", function(obj, tf) standardGeneric("displayPage"))
-setGeneric("setGenomicRegion",    signature="obj", function(obj, tbl.regions) standardGeneric("setGenomicRegion"))
+setGeneric("setGenomicRegion",    signature="obj", function(obj, tbl.region) standardGeneric("setGenomicRegion"))
 #------------------------------------------------------------------------------------------------------------------------
 #' Create an BindingSitesManager object
 #'
@@ -34,11 +34,12 @@ setGeneric("setGenomicRegion",    signature="obj", function(obj, tbl.regions) st
 #'
 #' @export
 #'
-BindingSitesManager <- function(organism, genome, quiet=TRUE)
+BindingSitesManager <- function(organism, genome, initialGenomicRegion, quiet=TRUE)
 {
    state <- new.env(parent=emptyenv())
    state$TF <- NULL
-   state$regions <- data.frame()
+   state$region <- initialGenomicRegion
+   state$regionString <- with(initialGenomicRegion, sprintf("%s:%d-%d", chrom, start, end))
 
    obj <- .BindingSitesManager(organism=organism, genome=genome, quiet=quiet, state=state)
 
@@ -80,11 +81,19 @@ setMethod("setTF", "BindingSitesManager",
 #'
 setMethod("setGenomicRegion", "BindingSitesManager",
 
-     function(obj, tbl.regions) {
-        printf("--- BindingSitesManager, new genomic region")
-        print(tbl.regions)
-        obj@state$regions <- tbl.regions
-        obj@state$regionsString <- with(tbl.regions, sprintf("%s:%d-%d", chrom, start, end))
+     function(obj, tbl.region) {
+        if(all(tbl.region == obj@state$region))
+           return()
+        new.roi <- with(tbl.region, sprintf("%s:%d-%d", chrom, start, end))
+        new.region.requested <- !(all(tbl.region == obj@state$region))
+        obj@state$region <- tbl.region
+        if(new.region.requested){
+           printf("--- BindingSitesManager, new genomic region: %s", new.roi)
+           obj@state$region <- tbl.region
+           obj@state$regionString <- new.roi
+           genomicRegionsString <- sprintf("%s  (%d bases)", new.roi, with(tbl.region, 1 + end - start))
+           js$setBindingSitesManagerGenomicRegionDisplay(genomicRegionsString)
+           } # if new
         })
 
 #------------------------------------------------------------------------------------------------------------------------
@@ -104,7 +113,7 @@ setMethod("createPage", "BindingSitesManager",
             extendShinyjs(script=system.file(package="TrenaViz", "js", "bindingSitesManager.js")),
             fluidRow(
                column(6, offset=2, h3(id="bindingSitesManagerPageTitle",
-                                      sprintf("Explore Binding Sites for %s: %s", obj@state$TF, obj@state$region)))),
+                                      sprintf("Explore Binding Sites for %s: %s", obj@state$TF, obj@state$regionString)))),
             br(),
             fluidRow(
                column(3,
@@ -227,7 +236,6 @@ setMethod("displayPage", "BindingSitesManager",
          insertUI(selector="#bindingSitesManagerPage", where="afterEnd", createPage(obj), immediate=TRUE)
          updateTabItems(obj@state$session, "sidebarMenu", select="bindingSitesManagerTab")
          removeLogos(obj)
-         js$installReturnKeyHandlers()
          #printf("about to go red")
          #js$pageRed()
          #printf("after going red")
@@ -254,6 +262,8 @@ setMethod("addEventHandlers", "BindingSitesManager",
        obj@state$input <- input
        obj@state$output <- output
 
+       js$installBindingSitesManagerReturnKeyHandlers()
+
        observeEvent(input$tfSelector, ignoreInit=TRUE, {
           tf <- input$tfSelector
           if(nchar(tf) == 0) return();
@@ -275,13 +285,13 @@ setMethod("addEventHandlers", "BindingSitesManager",
         observeEvent(input$textInput_exploreAnotherTF_widget_returnKey, {
            new.tf <- isolate(input$textInput_exploreAnotherTF)
            printf("explore this new TF: %s", new.tf)
-           setTF(obj, new.tf)
+           if(nchar(new.tf) == 0) return();
+           displayPage(obj, new.tf)
            })
-
 
         observeEvent(input$findMatchesButton, ignoreInit=TRUE, {
            motif <- isolate(input$motifChooser)
-           print(obj@state$regions)
+           print(obj@state$region)
            output$motifMatchCountDisplay <- renderText({"   "})
            sequenceMatchAlgorithm <- isolate(input$matchAlgorithmChooser)
            matchThreshold <- isolate(input$biostringsMatchThresholdSlider)
@@ -292,7 +302,7 @@ setMethod("addEventHandlers", "BindingSitesManager",
            printf("    %s", sequenceMatchAlgorithm)
            printf("    %f", matchThreshold)
            printf("    %s", motif)
-           m4 <- MultiMethodMotifMatcher(obj@genome, motif.matrix, obj@state$regions, sequenceMatchAlgorithm, matchThreshold)
+           m4 <- MultiMethodMotifMatcher(obj@genome, motif.matrix, obj@state$region, sequenceMatchAlgorithm, matchThreshold)
            tbl.hits <- matchMotifInSequence(m4)
            rowCountAsString <- sprintf("%d", nrow(tbl.hits))
            printf("hits: %s", rowCountAsString)
@@ -304,7 +314,7 @@ setMethod("addEventHandlers", "BindingSitesManager",
            obj@state$motifHits <- tbl.hits
            #mm <- MotifMatcher("hg38", as.list(pwm.oi), quiet=TRUE)
            # matchThreshold <- 80
-           # tbl.matches <- findMatchesByChromosomalRegion(mm, tbl.regions, pwmMatchMinimumAsPercentage=matchThreshold)
+           # tbl.matches <- findMatchesByChromosomalRegion(mm, tbl.region, pwmMatchMinimumAsPercentage=matchThreshold)
            # if(nrow(tbl.matches) > 0){
            #    tbl.tmp <- tbl.matches[, c("chrom", "motifStart", "motifEnd", "motifRelativeScore")]
            #    colnames(tbl.tmp) <- c("chrom", "start", "end", "value")
@@ -342,7 +352,6 @@ setMethod("addEventHandlers", "BindingSitesManager",
            later(function(){loadBedGraphTrack(obj@state$session, obj@state$TF, tbl.bg,
                                               color=next.color, trackHeight=50, autoscale=TRUE, quiet=FALSE)}, 1)
            })
-
      }) # addEventHandlers
 
 #------------------------------------------------------------------------------------------------------------------------
@@ -357,10 +366,10 @@ setMethod("addEventHandlers", "BindingSitesManager",
 #       pwms.motifDb <- MotifDb[full.motif.names]
 #       pwm.name.oi <- c(names(pwms.tfClass), names(pwms.motifDb))[1]
 #       pwm.oi <- MotifDb[pwm.name.oi]
-#       tbl.regions <- with(chrom.loc, data.frame(chrom=chrom, start=start, end=end, stringsAsFactors=FALSE))
+#       tbl.region <- with(chrom.loc, data.frame(chrom=chrom, start=start, end=end, stringsAsFactors=FALSE))
 #       mm <- MotifMatcher("hg38", as.list(pwm.oi), quiet=TRUE)
 #       matchThreshold <- 80
-#       tbl.matches <- findMatchesByChromosomalRegion(mm, tbl.regions, pwmMatchMinimumAsPercentage=matchThreshold)
+#       tbl.matches <- findMatchesByChromosomalRegion(mm, tbl.region, pwmMatchMinimumAsPercentage=matchThreshold)
 #       if(nrow(tbl.matches) > 0){
 #          tbl.tmp <- tbl.matches[, c("chrom", "motifStart", "motifEnd", "motifRelativeScore")]
 #          colnames(tbl.tmp) <- c("chrom", "start", "end", "value")

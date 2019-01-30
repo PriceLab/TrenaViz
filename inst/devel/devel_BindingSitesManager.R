@@ -3,10 +3,10 @@ library(shinydashboard)
 library(TrenaViz)
 library(shinyjs)
 #------------------------------------------------------------------------------------------------------------------------
-bsm <- BindingSitesManager("Hsapiens", "hg38")
-tbl.regions <- data.frame(chrom="chr19", start=1036002, end=1142642, stringsAsFactors=FALSE)
-setGenomicRegion(bsm, tbl.regions)
-genomicRegionsString <- with(tbl.regions, sprintf("%s:%d-%d", chrom, start, end))
+tbl.region <- data.frame(chrom="chr19", start=1036002, end=1142642, stringsAsFactors=FALSE)
+bsm <- BindingSitesManager("Hsapiens", "hg38", tbl.region)
+# setGenomicRegion(bsm, tbl.region)
+genomicRegionString <- with(tbl.region, sprintf("%s:%d-%d", chrom, start, end))
 #------------------------------------------------------------------------------------------------------------------------
 .createSidebar <- function()
 {
@@ -24,7 +24,8 @@ genomicRegionsString <- with(tbl.regions, sprintf("%s:%d-%d", chrom, start, end)
   tabItem(tabName="mainTab",
      div(
         h5("Choose TF:"),
-        selectInput("tfSelector", NULL,  c("", "HES7", "LYL1", "IRF5", "SPI1", "CEBPA", "ELK3", "RUNX1"))
+        selectInput("tfSelector", NULL,  c("", "HES7", "LYL1", "IRF5", "SPI1", "CEBPA", "ELK3", "RUNX1")),
+        actionButton("randomChromLocsButton", "New region")
         )
      )
 
@@ -36,8 +37,8 @@ genomicRegionsString <- with(tbl.regions, sprintf("%s:%d-%d", chrom, start, end)
            fluidPage(id="bindingSitesManagerPage",
                      h3(id="bindingSitesManager_title", "Explore Binding Sites"),
                      h4(id="bindingSitesManager_currentTF", sprintf("TF: %s", "none yet specified")),
-                     h4(id="bindingSitesManager_currentGenomicRegion", genomicRegionsString),
-                     textInput("textInput_exploreAnotherTF", label="Specify a new TF:"),
+                     h4(id="bindingSitesManager_currentGenomicRegion", genomicRegionString),
+                     textInput(inputId="textInput_exploreAnotherTF", label="Specify a new TF:"),
                      fluidRow(id="bindingSitesManagerPageContent")))
 
 } # .createExperimentalTab
@@ -46,6 +47,7 @@ genomicRegionsString <- with(tbl.regions, sprintf("%s:%d-%d", chrom, start, end)
 {
    dashboardBody(
       includeCSS(system.file(package="TrenaViz", "css", "trenaViz.css")),
+      useShinyjs(),
       extendShinyjs(script=system.file(package="TrenaViz", "js", "bindingSitesManager.js")),
       tabItems(
          .createMainTab(),
@@ -58,14 +60,28 @@ ui <- dashboardPage(
 
    dashboardHeader(title="BindingSitesManager devel"),
    .createSidebar(),
-   .createBody(),
-   useShinyjs(),
+   .createBody()
 
 )
 #------------------------------------------------------------------------------------------------------------------------
 server <- function(session, input, output)
 {
    addEventHandlers(bsm, session, input, output)
+
+
+       #-----------------------------------------------------------------------------
+       # for testing only.   button is added to the ui by devel_BindingSitesManager.R
+       #-----------------------------------------------------------------------------
+
+   printf("---- adding observer for randomChromLocsButton")
+   observeEvent(input$randomChromLocsButton, ignoreInit=FALSE, {
+      printf("setting new genomic regions")
+      tbl.region <- data.frame(chrom="chr19",
+                               start=1036002 + as.integer(100 * runif(1)),
+                               end=1142642   +  as.integer(100 * runif(1)),
+                               stringsAsFactors=FALSE)
+      setGenomicRegion(bsm, tbl.region)
+      })
 
 } # server
 #------------------------------------------------------------------------------------------------------------------------

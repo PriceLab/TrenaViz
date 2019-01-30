@@ -3,7 +3,7 @@
 \docType{data}
 \name{TrenaViz}
 \alias{TrenaViz}
-\alias{bsm}
+\alias{tbl.region}
 \title{import shiny
 import shinydashboard
 import shinyjs
@@ -18,9 +18,9 @@ import colourpicker
 import later
 import MotifDb
 import ggpseqlogo}
-\format{An object of class \code{BindingSitesManager} of length 1.}
+\format{An object of class \code{data.frame} with 1 rows and 3 columns.}
 \usage{
-bsm
+tbl.region
 
 TrenaViz(projectName, quiet = TRUE)
 }

@@ -1,9 +1,9 @@
 shinyjs.pageRed = function(){$('#bindingSitesManagerPageContent > div:nth-child(1) > div > h3').css('background', '#FF00FF');}
 //----------------------------------------------------------------------------------------------------
-shinyjs.installReturnKeyHandlers = function(){
+shinyjs.installBindingSitesManagerReturnKeyHandlers = function(){
   document.getElementById('textInput_exploreAnotherTF').onkeypress = function(e){
     if (!e) e = window.event;
-    //console.log("key  entered in textInput_exploreAnotherTF");
+    console.log("key  entered in textInput_exploreAnotherTF");
     var keyCode = e.keyCode || e.which;
     if (keyCode == '13'){
       console.log(" keycode 13 found in textInput_exploreAnotherTF");
@@ -12,11 +12,11 @@ shinyjs.installReturnKeyHandlers = function(){
       }
     return true;
   }
-} // installReturnKeyHandlers
+} // installBindingSitesManagerReturnKeyHandlers
 //----------------------------------------------------------------------------------------------------
 shinyjs.clear_textInput_exploreAnotherTF = function(){
 
-    console.log("shinyjs.sclear_textInput_exploreAnotherTF");
+   console.log("shinyjs.clear_textInput_exploreAnotherTF");
 
    $("#textInput_exploreAnotherTF").val("");
 
@@ -29,6 +29,14 @@ shinyjs.setBindingSitesManagerPageTitle = function(newTranscriptionFactor){
    $("#bindingSitesManager_currentTF").text("TF: " + newTranscriptionFactor);
 
 } // setBindingSitesManagerPageTitle
+//----------------------------------------------------------------------------------------------------
+shinyjs.setBindingSitesManagerGenomicRegionDisplay = function(genomicRegionsString){
+
+   console.log("shinyjs.setBindingSitesManagerPageTitle: " + genomicRegionsString)
+
+   $("#bindingSitesManager_currentGenomicRegion").text(genomicRegionsString)
+
+} // setBindingSitesManagerGenomicRegionDisplay
 //----------------------------------------------------------------------------------------------------
 
 //$(document).ready(function() {
