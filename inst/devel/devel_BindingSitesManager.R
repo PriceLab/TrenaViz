@@ -6,6 +6,7 @@ library(shinyjs)
 bsm <- BindingSitesManager("Hsapiens", "hg38")
 tbl.regions <- data.frame(chrom="chr19", start=1036002, end=1142642, stringsAsFactors=FALSE)
 setGenomicRegion(bsm, tbl.regions)
+genomicRegionsString <- with(tbl.regions, sprintf("%s:%d-%d", chrom, start, end))
 #------------------------------------------------------------------------------------------------------------------------
 .createSidebar <- function()
 {
@@ -33,6 +34,10 @@ setGenomicRegion(bsm, tbl.regions)
 {
    tabItem(tabName="bindingSitesManagerTab",
            fluidPage(id="bindingSitesManagerPage",
+                     h3(id="bindingSitesManager_title", "Explore Binding Sites"),
+                     h4(id="bindingSitesManager_currentTF", sprintf("TF: %s", "none yet specified")),
+                     h4(id="bindingSitesManager_currentGenomicRegion", genomicRegionsString),
+                     textInput("textInput_exploreAnotherTF", label="Specify a new TF:"),
                      fluidRow(id="bindingSitesManagerPageContent")))
 
 } # .createExperimentalTab
@@ -41,6 +46,7 @@ setGenomicRegion(bsm, tbl.regions)
 {
    dashboardBody(
       includeCSS(system.file(package="TrenaViz", "css", "trenaViz.css")),
+      extendShinyjs(script=system.file(package="TrenaViz", "js", "bindingSitesManager.js")),
       tabItems(
          .createMainTab(),
          .createBindingSitesManagerTab()
@@ -53,7 +59,7 @@ ui <- dashboardPage(
    dashboardHeader(title="BindingSitesManager devel"),
    .createSidebar(),
    .createBody(),
-   useShinyjs()
+   useShinyjs(),
 
 )
 #------------------------------------------------------------------------------------------------------------------------

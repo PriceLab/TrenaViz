@@ -60,6 +60,11 @@ setMethod("setTF", "BindingSitesManager",
 
      function(obj, tf) {
         obj@state$TF <- tf
+        js$setBindingSitesManagerPageTitle(tf)
+          # disable some buttons
+        shinyjs::disable("findMatchesButton")
+        shinyjs::disable("displayTrackButton")
+        js$clear_textInput_exploreAnotherTF()
         })
 
 #------------------------------------------------------------------------------------------------------------------------
@@ -75,11 +80,12 @@ setMethod("setTF", "BindingSitesManager",
 #'
 setMethod("setGenomicRegion", "BindingSitesManager",
 
-          function(obj, tbl.regions) {
-             printf("--- BindingSitesManager, new genomic region")
-             print(tbl.regions)
-             obj@state$regions <- tbl.regions
-             })
+     function(obj, tbl.regions) {
+        printf("--- BindingSitesManager, new genomic region")
+        print(tbl.regions)
+        obj@state$regions <- tbl.regions
+        obj@state$regionsString <- with(tbl.regions, sprintf("%s:%d-%d", chrom, start, end))
+        })
 
 #------------------------------------------------------------------------------------------------------------------------
 #' create and return the control-rich UI
@@ -93,20 +99,18 @@ setMethod("setGenomicRegion", "BindingSitesManager",
 #'
 setMethod("createPage", "BindingSitesManager",
 
-          function(obj) {
-            div(id="bindingSitesManagerPageContent",
+      function(obj) {
+         div(id="bindingSitesManagerPageContent",
             extendShinyjs(script=system.file(package="TrenaViz", "js", "bindingSitesManager.js")),
             fluidRow(
                column(6, offset=2, h3(id="bindingSitesManagerPageTitle",
-                                      sprintf("Explore Binding Sites for %s", obj@state$TF)))),
+                                      sprintf("Explore Binding Sites for %s: %s", obj@state$TF, obj@state$region)))),
             br(),
             fluidRow(
                column(3,
                       radioButtons("tfMotifMappingOptions", "TF-Motif Mapping Options",
                                   c("MotifDb", "TFClass", "both"), selected="MotifDb", inline=TRUE),
-                      actionButton("displayMotifsButton", "Display Motifs"),
-                      br(),
-                      textInput("textInput_exploreAnotherTF", label="Explore another TF:")),
+                      actionButton("displayMotifsButton", "Display Motifs")),
                column(3,
                       selectInput("motifChooser", "Choose Motif", c()),
                       selectInput("matchAlgorithmChooser", "Choose Match Algorithm",
@@ -254,14 +258,6 @@ setMethod("addEventHandlers", "BindingSitesManager",
           tf <- input$tfSelector
           if(nchar(tf) == 0) return();
           displayPage(obj, tf)
-          # removeLogos(obj)
-          # if(nchar(tf) == 0) return();
-          # printf("tf: %s",   tf)
-          # setTF(obj, tf)
-          # removeUI(selector="#bindingSitesManagerPageContent", immediate=TRUE)
-          # insertUI(selector="#bindingSitesManagerPage", where="afterEnd", createPage(obj), immediate=TRUE)
-          # updateTabItems(session, "sidebarMenu", select="bindingSitesManagerTab")
-          # removeLogos(obj)
           })
 
         observeEvent(input$displayMotifsButton, ignoreInit=TRUE, {
@@ -280,7 +276,6 @@ setMethod("addEventHandlers", "BindingSitesManager",
            new.tf <- isolate(input$textInput_exploreAnotherTF)
            printf("explore this new TF: %s", new.tf)
            setTF(obj, new.tf)
-           js$setBindingSitesManagerPageTitle(new.tf)  # todo: move this to setTF?
            })
 
 

@@ -383,7 +383,8 @@ setMethod('createServer', 'TrenaViz',
 {
    tabItem(tabName="bindingSitesManagerTab",
            fluidPage(id="bindingSitesManagerPage",
-                     h4("Binding Sites Manager"),
+                     h3(id="bindingSiteManagerTitle", "Explore Binding Sites"),
+                     textInput("textInput_exploreAnotherTF", label="Specify New TF:"),
                      fluidRow(id="bindingSitesManagerPageContent")))
 
 } # .createExperimentalTab
