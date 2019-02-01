@@ -108,7 +108,6 @@ setMethod('createUI', 'TrenaViz',
            extendShinyjs(script=system.file(package="TrenaViz", "js", "bindingSitesManager.js")),
           .createBody(obj@project))
        ) # dashboardPage
-
     return(ui)
    })
 
@@ -131,22 +130,17 @@ setMethod('createServer', 'TrenaViz',
 
       .createTrackFileUploader(session, input, output)
       addEventHandlers(bsm, session, input, output)
+      js$installTrenaVizReturnKeyHandlers()
 
       observeEvent(input$textInput_offListGene_widget_returnKey, ignoreInit=TRUE, {
-         newGene <- toupper(isolate(input$offListGene))
-         legit <- recognizedGene(obj@project, newGene)
-         if(!legit){
-            msg <- sprintf("'%s' not found in current datasets.", newGene)
-            showModal(modalDialog(title="gene nomination error", msg))
-            }
-         if(legit){
-            shinyjs::html(selector=".logo", html=sprintf("trena %s", newGene), add=FALSE)
-            setTargetGene(obj@project, newGene)
-            showGenomicRegion(session, getGeneRegion(obj@project, flankingPercent=20))
-            state$tbl.enhancers <- getEnhancers(obj@project)
-            state$tbl.dhs <- getEncodeDHS(obj@project)
-            state$tbl.transcripts <- getTranscriptsTable(obj@project)
-            }
+         printf("--- textInput_offListGene_widget_returnKey event received")
+         newGene <- isolate(input$textInput_offListGene)
+         shinyjs::html(selector=".logo", html=sprintf("trena %s", newGene), add=FALSE)
+         setTargetGene(obj@project, newGene)
+         showGenomicRegion(session, getGeneRegion(obj@project, flankingPercent=20)$chromLocString)
+         state$tbl.enhancers <- getEnhancers(obj@project)
+         state$tbl.dhs <- getEncodeDHS(obj@project)
+         state$tbl.transcripts <- getTranscriptsTable(obj@project)
          })
 
 
@@ -182,8 +176,8 @@ setMethod('createServer', 'TrenaViz',
 
 
    output$igvShiny <- renderIgvShiny({
-      options <- list(genomeName="hg38",
-                      initialLocus=getGeneRegion(obj@project, flankingPercent=20),
+      options <- list(genomeName=getGenome(obj@project),
+                      initialLocus=getGeneRegion(obj@project, flankingPercent=20)$chromLocString,
                       displayMode="EXPANDED",
                       trackHeight=300)
       igvShiny(options) # , height=800)

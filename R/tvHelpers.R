@@ -263,8 +263,8 @@ setupDisplayRegion <- function(trenaProject, session, input, output)
       printf(" displayRegion: %s", requestedRegion)
       margin <- 5000
       loc.string <-switch(requestedRegion,
-                          fullEnhancerRegion = {getGeneEnhancersRegion(trenaProject, 10)},
-                          fullGeneRegion = {getGeneRegion(trenaProject, 20)})
+                          fullEnhancerRegion = {getGeneEnhancersRegion(trenaProject, 10)$chromLocString},
+                          fullGeneRegion = {getGeneRegion(trenaProject, 20)$chromLocString})
       showGenomicRegion(session, loc.string);
       later(function() {updateSelectInput(session, "displayGenomicRegion", selected=character(0))}, 1)
       })

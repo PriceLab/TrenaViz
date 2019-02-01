@@ -86,7 +86,7 @@ setMethod("matchMotifInSequence", "MultiMethodMotifMatcher",
          motif.tfbs <- convert_motifs(obj@motifMatrix[[1]], "TFBSTools-PWMatrix")
          gr.regions <- GRanges(obj@regions)
          matchThreshold = 1/10^(obj@matchThreshold)
-         tbl.out <- as.data.frame(matchMotifs(motif.tfbs, gr.regions, genome="hg38", out="positions", p.cutoff=matchThreshold))
+         tbl.out <- as.data.frame(matchMotifs(motif.tfbs, gr.regions, genome=obj@genome, out="positions", p.cutoff=matchThreshold))
          if(!obj@quiet){
             message(sprintf("MOODS matchMotifs %d bases found %d hits", total.bases, nrow(tbl.out)))
             }
