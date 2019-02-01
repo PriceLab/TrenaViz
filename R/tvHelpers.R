@@ -521,7 +521,6 @@ displayModel <- function(session, input, output, tbl.model, new.model.name)
                                                    fixedColumns=list(leftColumns=1)
                                                    ))
 
-
    updateSelectInput(session, "modelSelector",
                      choices=names(state$models),
                      selected=new.model.name)

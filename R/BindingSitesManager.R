@@ -123,7 +123,7 @@ setMethod("setGenomicRegion", "BindingSitesManager",
         new.region.requested <- !(all(tbl.region == obj@state$region))
         obj@state$region <- tbl.region
         if(new.region.requested){
-           printf("--- BindingSitesManager, new genomic region: %s", new.roi)
+           #printf("--- BindingSitesManager, new genomic region: %s", new.roi)
            obj@state$region <- tbl.region
            obj@state$regionString <- new.roi
            genomicRegionsString <- sprintf("%s  (%d bases)", new.roi, with(tbl.region, 1 + end - start))
@@ -205,7 +205,7 @@ setMethod("renderLogos", "BindingSitesManager",
       motifNames.motifDb <- c()
 
       if("tfclass" %in% mappingOptions){
-         motifNames.tfClass <- geneToMotif(MotifDb, tf, source="TFClass")$motif
+         motifNames.tfClass <- geneToMotif(MotifDb, tf, source="TFClass", ignore.case=TRUE)$motif
          printf("tfClass motifs: %d", length(motifNames.tfClass))
          if(length(motifNames.tfClass) > 0)
             pwms.tfClass.longNames <- names(query(MotifDb, obj@state$organism, motifNames.tfClass))
@@ -213,7 +213,7 @@ setMethod("renderLogos", "BindingSitesManager",
 
       if("motifdb" %in% mappingOptions){
          pwms.motifDb <- c()
-         motifNames.motifDb <- rownames(geneToMotif(MotifDb, tf, source="MotifDb"))
+         motifNames.motifDb <- rownames(geneToMotif(MotifDb, tf, source="MotifDb", ignore.case=TRUE))
          printf("motifDb motifs: %d", length(motifNames.motifDb))
          }
 

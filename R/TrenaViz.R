@@ -144,12 +144,21 @@ setMethod('createServer', 'TrenaViz',
       observeEvent(input$textInput_offListGene_widget_returnKey, ignoreInit=TRUE, {
          printf("--- textInput_offListGene_widget_returnKey event received")
          newGene <- isolate(input$textInput_offListGene)
-         shinyjs::html(selector=".logo", html=sprintf("trena %s", newGene), add=FALSE)
-         setTargetGene(obj@project, newGene)
-         showGenomicRegion(session, getGeneRegion(obj@project, flankingPercent=20)$chromLocString)
-         state$tbl.enhancers <- getEnhancers(obj@project)
-         state$tbl.dhs <- getEncodeDHS(obj@project)
-         state$tbl.transcripts <- getTranscriptsTable(obj@project)
+         legit <- recognizedGene(obj@project, newGene)
+         if(!legit){
+            msg <- sprintf("'%s' not found in current datasets.", newGene)
+            showModal(modalDialog(title="gene nomination error", msg))
+            }
+         if(legit){
+            shinyjs::html(selector=".logo", html=sprintf("trena %s", newGene), add=FALSE)
+            success <- setTargetGene(obj@project, newGene)
+            newRegion <- getGeneRegion(obj@project, flankingPercent=20)$chromLocString
+            printf("--- new region for %s: %s", newGene, newRegion)
+            showGenomicRegion(session, newRegion)
+            state$tbl.enhancers <- getEnhancers(obj@project)
+            state$tbl.dhs <- getEncodeDHS(obj@project)
+            state$tbl.transcripts <- getTranscriptsTable(obj@project)
+            }
          })
 
 
@@ -166,7 +175,7 @@ setMethod('createServer', 'TrenaViz',
             state$tbl.enhancers <- getEnhancers(obj@project)
             state$tbl.dhs <- getEncodeDHS(obj@project)
             state$tbl.transcripts <- getTranscriptsTable(obj@project)
-            showGenomicRegion(session, getGeneRegion(obj@project, flankingPercent=20))
+            showGenomicRegion(session, getGeneRegion(obj@project, flankingPercent=20)$chromLocString)
             }
          })
 
@@ -175,12 +184,13 @@ setMethod('createServer', 'TrenaViz',
        newGene <- isolate(input$chooseGeneFromList)
        shinyjs::html(selector=".logo", html=sprintf("trena %s", newGene), add=FALSE)
        setTargetGene(obj@project, newGene)
-       showGenomicRegion(session, getGeneRegion(obj@project, flankingPercent=20))
+       showGenomicRegion(session, getGeneRegion(obj@project, flankingPercent=20)$chromLocString)
        printf("new targetGene: %s", getTargetGene(obj@project))
        state$tbl.enhancers <- getEnhancers(obj@project)
        state$tbl.dhs <- getEncodeDHS(obj@project)
        state$tbl.transcripts <- getTranscriptsTable(obj@project)
        loadAndDisplayRelevantVariants(obj@project, session, newGene)
+       later(function() {updateSelectInput(session, "chooseGeneFromList", selected=character(0))}, 1)
        })
 
 
@@ -249,7 +259,7 @@ setMethod('createServer', 'TrenaViz',
             ), # tabItem 1
          .createBuildModelTab(project),
          .createVideoTab(),
-         .createMotifTab(),
+         #.createMotifTab(),
          .createBindingSitesManagerTab()
          ) # tabItems
 
@@ -262,9 +272,9 @@ setMethod('createServer', 'TrenaViz',
   dashboardSidebar(
     sidebarMenu(id="sidebarMenu",
        menuItem("IGV and Current Models", tabName = "igvAndTable"),
-       menuItem("Build a new Model",      tabName = "buildModels"),
+       menuItem("Build Footprint Model",  tabName = "buildFootprintModels"),
        menuItem("Introductory video",     tabName = "video"),
-       menuItem("Motifs",                 tabName = "motifTab"),
+       #menuItem("Motifs",                 tabName = "motifTab"),
        menuItem("Binding Sites Mangager", tabName = "bindingSitesManagerTab")
 
       ),
@@ -330,7 +340,7 @@ setMethod('createServer', 'TrenaViz',
    footprintDatabases <- getFootprintDatabaseNames(project)
    expressionMatrixNames <- getExpressionMatrixNames(project)
 
-   tab <- tabItem(tabName="buildModels",
+   tab <- tabItem(tabName="buildFootprintModels",
              h4("Build trena regulatory model from DNase footprints in the genomic region currently displayed in IGV, with these constraints:"),
              br(),
              fluidRow(
@@ -373,17 +383,17 @@ setMethod('createServer', 'TrenaViz',
 
 } # .createVideoTab
 #------------------------------------------------------------------------------------------------------------------------
-.createMotifTab <- function()
-{
-   xyz <- ".createMotifTab"
-   tab <- tabItem(tabName="motifTab",
-                  h4("Select a Motif"),
-                  actionButton(inputId = "displayMotifButton", label = "Display Motif"),
-                  plotOutput("motifPlotRenderingPanel", height=800)
-                  )
-   return(tab)
-
-} # .createMotifTab
+# .createMotifTab <- function()
+# {
+#    xyz <- ".createMotifTab"
+#    tab <- tabItem(tabName="motifTab",
+#                   h4("Select a Motif"),
+#                   actionButton(inputId = "displayMotifButton", label = "Display Motif"),
+#                   plotOutput("motifPlotRenderingPanel", height=800)
+#                   )
+#    return(tab)
+#
+# } # .createMotifTab
 #------------------------------------------------------------------------------------------------------------------------
 .createBindingSitesManagerTab <- function()
 {
