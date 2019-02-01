@@ -6,14 +6,14 @@
 \alias{.BindingSitesManager}
 \title{import shiny}
 \usage{
-BindingSitesManager(organism, genome, initialGenomicRegion, quiet = TRUE)
+BindingSitesManager(quiet = TRUE)
 }
 \arguments{
+\item{quiet}{A logical indicating whether or not the Trena object should print output}
+
 \item{organism}{A character string, one of the supported species names:  hsapiens, mmuscuulus}
 
 \item{genome}{A character string, one of the supported genome builds: hg38, mm10}
-
-\item{quiet}{A logical indicating whether or not the Trena object should print output}
 }
 \value{
 An object of the BindingSitesManager class

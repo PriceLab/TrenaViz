@@ -4,7 +4,8 @@ library(TrenaViz)
 library(shinyjs)
 #------------------------------------------------------------------------------------------------------------------------
 tbl.region <- data.frame(chrom="chr19", start=1036002, end=1142642, stringsAsFactors=FALSE)
-bsm <- BindingSitesManager("Hsapiens", "hg38", tbl.region)
+bsm <- BindingSitesManager()
+#bsm <- BindingSitesManager("Hsapiens", "hg38", tbl.region)
 # setGenomicRegion(bsm, tbl.region)
 genomicRegionString <- with(tbl.region, sprintf("%s:%d-%d", chrom, start, end))
 #------------------------------------------------------------------------------------------------------------------------
@@ -66,8 +67,13 @@ ui <- dashboardPage(
 #------------------------------------------------------------------------------------------------------------------------
 server <- function(session, input, output)
 {
-   addEventHandlers(bsm, session, input, output)
+   setOrganism(bsm, "Hsapiens")
+   setGenome(bsm, "hg38")
+   tbl.region <- data.frame(chrom="chr19", start=1036002, end=1142642, stringsAsFactors=FALSE)
+   setGenomicRegion(bsm, tbl.region)
 
+
+   addEventHandlers(bsm, session, input, output)
 
        #-----------------------------------------------------------------------------
        # for testing only.   button is added to the ui by devel_BindingSitesManager.R
@@ -85,5 +91,5 @@ server <- function(session, input, output)
 
 } # server
 #------------------------------------------------------------------------------------------------------------------------
-app <- shinyApp(ui, server)
+runApp(shinyApp(ui, server))
 

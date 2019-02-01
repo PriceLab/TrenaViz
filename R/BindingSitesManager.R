@@ -5,19 +5,19 @@
 #------------------------------------------------------------------------------------------------------------------------
 .BindingSitesManager <- setClass ("BindingSitesManager",
                                   representation = representation(
-                                     organism="character",
-                                     genome="character",
                                      quiet="logical",
                                      state="environment")
                                   )
 #------------------------------------------------------------------------------------------------------------------------
 setGeneric("addEventHandlers",    signature="obj", function(obj, session, input, output) standardGeneric("addEventHandlers"))
+setGeneric("setOrganism",         signature="obj", function(obj, organism) standardGeneric("setOrganism"))
+setGeneric("setGenome",           signature="obj", function(obj, genomeName) standardGeneric("setGenome"))
+setGeneric("setGenomicRegion",    signature="obj", function(obj, tbl.region) standardGeneric("setGenomicRegion"))
 setGeneric("setTF",               signature="obj", function(obj, tf) standardGeneric("setTF"))
 setGeneric("createPage",          signature="obj", function(obj) standardGeneric("createPage"))
 setGeneric("renderLogos",         signature="obj", function(obj, tfMappingOption) standardGeneric("renderLogos"))
 setGeneric("removeLogos",         signature="obj", function(obj) standardGeneric("removeLogos"))
 setGeneric("displayPage",         signature="obj", function(obj, tf) standardGeneric("displayPage"))
-setGeneric("setGenomicRegion",    signature="obj", function(obj, tbl.region) standardGeneric("setGenomicRegion"))
 #------------------------------------------------------------------------------------------------------------------------
 #' Create an BindingSitesManager object
 #'
@@ -34,18 +34,53 @@ setGeneric("setGenomicRegion",    signature="obj", function(obj, tbl.region) sta
 #'
 #' @export
 #'
-BindingSitesManager <- function(organism, genome, initialGenomicRegion, quiet=TRUE)
+BindingSitesManager <- function(quiet=TRUE)
 {
    state <- new.env(parent=emptyenv())
    state$TF <- NULL
-   state$region <- initialGenomicRegion
-   state$regionString <- with(initialGenomicRegion, sprintf("%s:%d-%d", chrom, start, end))
+   state$region <- data.frame(chrom="chr1", start=1, end=2, stringsAsFactors=FALSE)
+   state$regionString <- "chr1:1-2"
+   state$organism <- NULL
+   state$genome <- NULL
 
-   obj <- .BindingSitesManager(organism=organism, genome=genome, quiet=quiet, state=state)
-
-   obj
+   .BindingSitesManager(state=state,  quiet=quiet)
 
 } # BindingSitesManager
+#------------------------------------------------------------------------------------------------------------------------
+#' specity the organism: Hsapiens, Mmusculus, ...
+#'
+#' @rdname setOrganism
+#' @aliases setOrganism
+#'
+#' @param obj An object of class BindingSitesManager
+#' @param organism character string: Hsapiens, Mmusculus
+#'
+#' @export
+#'
+setMethod("setOrganism", "BindingSitesManager",
+
+     function(obj, organism) {
+        stopifnot(organism %in% c("Hsapiens", "Mmusculus"))
+        obj@state$organism <- organism
+        })
+
+#------------------------------------------------------------------------------------------------------------------------
+#' specity the genome build: hg38, mm10, ...
+#'
+#' @rdname setGenome
+#' @aliases setGenome
+#'
+#' @param obj An object of class BindingSitesManager
+#' @param genome build character string: hg38, mm10, ...
+#'
+#' @export
+#'
+setMethod("setGenome", "BindingSitesManager",
+
+     function(obj, genomeName) {
+        obj@state$genome <- genomeName
+        })
+
 #------------------------------------------------------------------------------------------------------------------------
 #' specity the tf (transcription factor) to work on
 #'
@@ -92,7 +127,8 @@ setMethod("setGenomicRegion", "BindingSitesManager",
            obj@state$region <- tbl.region
            obj@state$regionString <- new.roi
            genomicRegionsString <- sprintf("%s  (%d bases)", new.roi, with(tbl.region, 1 + end - start))
-           js$setBindingSitesManagerGenomicRegionDisplay(genomicRegionsString)
+           if(!is.null(js$setBindingSitesManagerGenomicRegionDisplay))  # not initialized on very early calls
+              js$setBindingSitesManagerGenomicRegionDisplay(genomicRegionsString)
            } # if new
         })
 
@@ -172,7 +208,7 @@ setMethod("renderLogos", "BindingSitesManager",
          motifNames.tfClass <- geneToMotif(MotifDb, tf, source="TFClass")$motif
          printf("tfClass motifs: %d", length(motifNames.tfClass))
          if(length(motifNames.tfClass) > 0)
-            pwms.tfClass.longNames <- names(query(MotifDb, obj@organism, motifNames.tfClass))
+            pwms.tfClass.longNames <- names(query(MotifDb, obj@state$organism, motifNames.tfClass))
          } # if tfclass
 
       if("motifdb" %in% mappingOptions){
@@ -302,7 +338,7 @@ setMethod("addEventHandlers", "BindingSitesManager",
            printf("    %s", sequenceMatchAlgorithm)
            printf("    %f", matchThreshold)
            printf("    %s", motif)
-           m4 <- MultiMethodMotifMatcher(obj@genome, motif.matrix, obj@state$region, sequenceMatchAlgorithm, matchThreshold)
+           m4 <- MultiMethodMotifMatcher(obj@state$genome, motif.matrix, obj@state$region, sequenceMatchAlgorithm, matchThreshold)
            tbl.hits <- matchMotifInSequence(m4)
            rowCountAsString <- sprintf("%d", nrow(tbl.hits))
            printf("hits: %s", rowCountAsString)

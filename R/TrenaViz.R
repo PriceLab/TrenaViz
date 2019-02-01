@@ -18,7 +18,7 @@
 #' @aliases TrenaViz
 #------------------------------------------------------------------------------------------------------------------------
 tbl.region <- data.frame(chrom="chr19", start=1036002, end=1142642, stringsAsFactors=FALSE)
-bsm <- BindingSitesManager("Hsapiens", "hg38", tbl.region)
+bsm <- BindingSitesManager()
 genomicRegionString <- "" #with(tbl.regions, sprintf("%s:%d-%d", chrom, start, end))
 #------------------------------------------------------------------------------------------------------------------------
 state <- new.env(parent=emptyenv())
@@ -61,6 +61,15 @@ TrenaViz <- function(projectName, quiet=TRUE)
    require(projectName, character.only=TRUE)
    initialization.command <- sprintf("trenaProject <- %s()", projectName)
    eval(parse(text=initialization.command))
+
+   genome.build <- getGenome(trenaProject)
+   setGenome(bsm, genome.build)
+   organism <- "Hsapiens"
+   if(genome.build == "mm10")
+      organism <- "Mmusculus"
+   setOrganism(bsm, organism) # getOrganism(trenaProject)
+   tbl.region <- data.frame(chrom="chr19", start=1036002, end=1142642, stringsAsFactors=FALSE)
+   setGenomicRegion(bsm, tbl.region)
 
    dataManifest <- list()
    base.class.manifest.file <- system.file(package="TrenaProject", "extdata", "genomeAnnotation", "manifest.yaml")

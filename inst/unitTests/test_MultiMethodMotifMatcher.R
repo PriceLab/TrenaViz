@@ -104,7 +104,11 @@ test_mouse <- function()
 {
    printf("--- test_mouse")
    runx1.mouse.hocomoco <- as.list(query(MotifDb, c("RUNX1", "musculus"), "hocomoco"))[1]
+
+      # Mmusculus-HOCOMOCOv10-RUNX1_MOUSE.H10MO.B`
+
    tbl.regions <- data.frame(chrom="chr4", start=53158836, end=53160990, stringsAsFactors=FALSE)
+       # chr4:53158836-53160990
    m4.1 <- MultiMethodMotifMatcher("mm10", runx1.mouse.hocomoco, tbl.regions, "Biostrings matchPWM", .9)
    tbl.bioc <- matchMotifInSequence(m4.1)
    checkEquals(dim(tbl.bioc), c(2,6))
