@@ -125,6 +125,7 @@ setMethod("setGenomicRegion", "BindingSitesManager",
         if(new.region.requested){
            #printf("--- BindingSitesManager, new genomic region: %s", new.roi)
            obj@state$region <- tbl.region
+           obj@state$regionSize <- with(tbl.region, 1 + end - start)
            obj@state$regionString <- new.roi
            genomicRegionsString <- sprintf("%s  (%d bases)", new.roi, with(tbl.region, 1 + end - start))
            if(!is.null(js$setBindingSitesManagerGenomicRegionDisplay))  # not initialized on very early calls
@@ -149,7 +150,8 @@ setMethod("createPage", "BindingSitesManager",
             extendShinyjs(script=system.file(package="TrenaViz", "js", "bindingSitesManager.js")),
             fluidRow(
                column(6, offset=2, h3(id="bindingSitesManagerPageTitle",
-                                      sprintf("Explore Binding Sites for %s: %s", obj@state$TF, obj@state$regionString)))),
+                                      sprintf("Explore Binding Sites for %s: %s (%d bases)",
+                                              obj@state$TF, obj@state$regionString, obj@state$regionSize)))),
             br(),
             fluidRow(
                column(3,
