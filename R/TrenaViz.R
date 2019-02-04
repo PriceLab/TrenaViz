@@ -72,7 +72,8 @@ TrenaViz <- function(projectName, quiet=TRUE)
    #tbl.region <- data.frame(chrom="chr19", start=1036002, end=1142642, stringsAsFactors=FALSE)
    region.list <- getGeneRegion(trenaProject, 20)
    tbl.region <- with(region.list, data.frame(chrom=chrom, start=start, end=end, stringsAsFactors=FALSE))
-   setGenomicRegion(bsm, tbl.region)
+   #printf("--- calling sgr(bsm) from TrenaViz ctor")
+   #setGenomicRegion(bsm, tbl.region)
 
    dataManifest <- list()
    base.class.manifest.file <- system.file(package="TrenaProject", "extdata", "genomeAnnotation", "manifest.yaml")
@@ -202,6 +203,7 @@ setMethod('createServer', 'TrenaViz',
       chromLocString <- region.list$chromLocString
       tbl.region <- with(region.list, data.frame(chrom=chrom, start=start, end=end, stringsAsFactors=FALSE))
       printf("renderIgvShiny, chrom loc?  %s", chromLocString)
+      printf("--- calling sgr(bsm) from renderIgvShiny")
       setGenomicRegion(bsm, tbl.region)
       options <- list(genomeName=getGenome(obj@project),
                       initialLocus=chromLocString,
@@ -234,6 +236,7 @@ setMethod('createServer', 'TrenaViz',
       state[["chromLocRegion"]] <- new.region
       chromLoc <- trena::parseChromLocString(new.region)
       tbl.region <- with(chromLoc, data.frame(chrom=chrom, start=start, end=end, stringsAsFactors=FALSE))
+      printf("--- calling sgr(bsm) from TrenaViz:observeEvent, input$currentGenomicRegion")
       setGenomicRegion(bsm, tbl.region)
       })
 

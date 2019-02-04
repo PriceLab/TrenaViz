@@ -9,7 +9,9 @@ setupIgvAndTableToggling <- function(session, input)
        if(newValue != state$chromLocRegion){
           printf("new genomic regions: %s", newValue)
           state$chromLocRegion <- newValue
-          tbl.region <- parseChromLocString(newValue)
+          loc <- parseChromLocString(newValue)
+          tbl.region <- with(loc, data.frame(chrom=chrom, start=start, end=end, stringsAsFactors=FALSE))
+          printf("--- calling sgr(bsm) from tvHelpers setupIgvAndTableToggling")
           setGenomicRegion(bsm, tbl.region)
           }
        })
