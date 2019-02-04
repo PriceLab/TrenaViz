@@ -4,8 +4,14 @@ setupIgvAndTableToggling <- function(session, input)
 {
    observeEvent(input$currentGenomicRegion, {
        newValue <- input$currentGenomicRegion
-       #printf("new genomic regions: %s", newValue)
-       state$chromLocRegion <- newValue
+       printf("newValue: %s", newValue)
+       printf("input$currentGenomicRegion: %s", input$currentGenomicRegion)
+       if(newValue != state$chromLocRegion){
+          printf("new genomic regions: %s", newValue)
+          state$chromLocRegion <- newValue
+          tbl.region <- parseChromLocString(newValue)
+          setGenomicRegion(bsm, tbl.region)
+          }
        })
 
    observeEvent(input$igvHideButton, {
@@ -544,7 +550,6 @@ dispatch.rowClickInModelTable <- function(trenaProject, session, input, output, 
 
    full.roi <- state$chromLocRegion
    chrom.loc <- trena::parseChromLocString(full.roi)
-
 
    if(action.name == "Footprints"){
       tbl.fp <- state$models[[current.model.name]]$regulatoryRegions

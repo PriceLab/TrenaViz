@@ -64,11 +64,14 @@ TrenaViz <- function(projectName, quiet=TRUE)
 
    genome.build <- getGenome(trenaProject)
    setGenome(bsm, genome.build)
+
    organism <- "Hsapiens"
    if(genome.build == "mm10")
       organism <- "Mmusculus"
    setOrganism(bsm, organism) # getOrganism(trenaProject)
-   tbl.region <- data.frame(chrom="chr19", start=1036002, end=1142642, stringsAsFactors=FALSE)
+   #tbl.region <- data.frame(chrom="chr19", start=1036002, end=1142642, stringsAsFactors=FALSE)
+   region.list <- getGeneRegion(trenaProject, 20)
+   tbl.region <- with(region.list, data.frame(chrom=chrom, start=start, end=end, stringsAsFactors=FALSE))
    setGenomicRegion(bsm, tbl.region)
 
    dataManifest <- list()
@@ -195,8 +198,13 @@ setMethod('createServer', 'TrenaViz',
 
 
    output$igvShiny <- renderIgvShiny({
+      region.list <- getGeneRegion(obj@project, flankingPercent=20)
+      chromLocString <- region.list$chromLocString
+      tbl.region <- with(region.list, data.frame(chrom=chrom, start=start, end=end, stringsAsFactors=FALSE))
+      printf("renderIgvShiny, chrom loc?  %s", chromLocString)
+      setGenomicRegion(bsm, tbl.region)
       options <- list(genomeName=getGenome(obj@project),
-                      initialLocus=getGeneRegion(obj@project, flankingPercent=20)$chromLocString,
+                      initialLocus=chromLocString,
                       displayMode="EXPANDED",
                       trackHeight=300)
       igvShiny(options) # , height=800)

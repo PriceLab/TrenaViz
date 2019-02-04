@@ -117,8 +117,10 @@ setMethod("setTF", "BindingSitesManager",
 setMethod("setGenomicRegion", "BindingSitesManager",
 
      function(obj, tbl.region) {
-        if(all(tbl.region == obj@state$region))
-           return()
+        #if(all(tbl.region == obj@state$region))
+        #   return()
+        if(nrow(tbl.region) == 0) return()
+        print(tbl.region)
         new.roi <- with(tbl.region, sprintf("%s:%d-%d", chrom, start, end))
         new.region.requested <- !(all(tbl.region == obj@state$region))
         obj@state$region <- tbl.region
@@ -148,11 +150,11 @@ setMethod("createPage", "BindingSitesManager",
       function(obj) {
          div(id="bindingSitesManagerPageContent",
             extendShinyjs(script=system.file(package="TrenaViz", "js", "bindingSitesManager.js")),
-            fluidRow(
-               column(6, offset=2, h3(id="bindingSitesManagerPageTitle",
-                                      sprintf("Explore Binding Sites for %s: %s (%d bases)",
-                                              obj@state$TF, obj@state$regionString, obj@state$regionSize)))),
-            br(),
+            #fluidRow(
+            #   column(12, offset=0, h3(id="bindingSitesManagerPageTitle",
+            #                          sprintf("Explore Binding Sites for %s: %s (%d bases)",
+            #                                  obj@state$TF, obj@state$regionString, obj@state$regionSize)))),
+            #br(),
             fluidRow(
                column(3,
                       radioButtons("tfMotifMappingOptions", "TF-Motif Mapping Options",
