@@ -65,42 +65,6 @@ redrawModelDataTable <- function()
 
 } # redrawModelDataTable
 #------------------------------------------------------------------------------------------------------------------------
-mapToChromLoc <- function(regionName)
-{
-   roi <- getTargetGene(trenaProject)   # a safe fallback
-
-   if(regionName == "traditionalPromoter"){
-      tbl.transcripts <- getTranscriptsTable(trenaProject)
-      chrom <- subset(tbl.transcripts, moleculetype=="gene")$chr
-      strand <- subset(tbl.transcripts, moleculetype=="gene")$strand
-      gene.start <- subset(tbl.transcripts, moleculetype=="gene")$start
-      gene.end   <- subset(tbl.transcripts, moleculetype=="gene")$endpos
-      upstream <- 5000
-      downstream <- 5000
-      if(strand == "+"){
-         tss <- gene.start
-         start <- tss - upstream
-         end <- tss + downstream
-         }
-      if(strand == "-"){
-         tss <- gene.end
-         start <- tss - downstream
-         end <- tss + upstream
-         }
-      roi <- sprintf("%s:%d-%d", chrom, start, end)
-      }
-
-   if(regionName == "enhancersRegion"){
-      chrom <- state$tbl.enhancers$chrom[1]
-      start <- min(state$tbl.enhancers$start) - 10000
-      end   <- max(state$tbl.enhancers$end) + 10000
-      roi <- sprintf("%s:%d-%d", chrom, start, end)
-      }
-
-   return(roi)
-
-} # mapToChromLoc
-#------------------------------------------------------------------------------------------------------------------------
 buildFootprintModel <- function(upstream, downstream)
 {
    tbl.gene <- subset(getTranscriptsTable(trenaProject), moleculetype=="gene")[1,]
@@ -352,7 +316,8 @@ buildModel <- function(trenaProject, session, input, output)
    message(sprintf("   mtx: %s", expressionMatrixName))
    message(printf("  intersect with: %s", paste(tracks.to.intersect.with, collapse=",")))
 
-   tbl.gene <- subset(state$tbl.transcripts, moleculetype=="gene")[1,]
+   #browser()
+   tbl.gene <- subset(state$tbl.transcripts)[1,]
    strand <- tbl.gene$strand
    tss <- tbl.gene$start
    if(strand == "-")
