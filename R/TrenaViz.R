@@ -1,3 +1,4 @@
+#' imprt TrenaProject
 #' import shiny
 #' import shinydashboard
 #' import shinyjs
@@ -186,15 +187,17 @@ setMethod('createServer', 'TrenaViz',
    observeEvent(input$chooseGeneFromList, ignoreInit=TRUE, {
        #  TODO: consolidate this code with that above, setOffListGeneButton code
        newGene <- isolate(input$chooseGeneFromList)
-       shinyjs::html(selector=".logo", html=sprintf("trena %s", newGene), add=FALSE)
-       setTargetGene(obj@project, newGene)
-       showGenomicRegion(session, getGeneRegion(obj@project, flankingPercent=20)$chromLocString)
-       printf("new targetGene: %s", getTargetGene(obj@project))
-       state$tbl.enhancers <- getEnhancers(obj@project)
-       state$tbl.dhs <- getEncodeDHS(obj@project)
-       state$tbl.transcripts <- getTranscriptsTable(obj@project)
-       loadAndDisplayRelevantVariants(obj@project, session, newGene)
-       later(function() {updateSelectInput(session, "chooseGeneFromList", selected=character(0))}, 1)
+       if(nchar(newGene) > 0){
+          shinyjs::html(selector=".logo", html=sprintf("trena %s", newGene), add=FALSE)
+          setTargetGene(obj@project, newGene)
+          showGenomicRegion(session, getGeneRegion(obj@project, flankingPercent=20)$chromLocString)
+          printf("new targetGene: %s", getTargetGene(obj@project))
+          state$tbl.enhancers <- getEnhancers(obj@project)
+          state$tbl.dhs <- getEncodeDHS(obj@project)
+          state$tbl.transcripts <- getTranscriptsTable(obj@project)
+          loadAndDisplayRelevantVariants(obj@project, session, newGene)
+          later(function() {updateSelectInput(session, "chooseGeneFromList", selected=character(0))}, 1)
+          } # if not empty string
        })
 
 

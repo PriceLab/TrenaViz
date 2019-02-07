@@ -4,7 +4,8 @@
 \name{TrenaViz}
 \alias{TrenaViz}
 \alias{tbl.region}
-\title{import shiny
+\title{imprt TrenaProject
+import shiny
 import shinydashboard
 import shinyjs
 import later
