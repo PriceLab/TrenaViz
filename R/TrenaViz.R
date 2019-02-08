@@ -92,6 +92,7 @@ TrenaViz <- function(projectName, quiet=TRUE)
    state$tbl.dhs <- getEncodeDHS(trenaProject)
    state$tbl.transcripts <- getTranscriptsTable(trenaProject)
    state$dataManifest <- dataManifest
+   state$chromLocRegion <- getGeneRegion(trenaProject, 20)$chromLocString
 
    obj <- .TrenaViz(projectName=projectName, project=trenaProject, quiet=quiet)
 

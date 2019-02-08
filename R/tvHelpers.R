@@ -135,7 +135,7 @@ displayTrack <- function(trenaProject, session, trackName)
    if(trackName %in% names(state$dataManifest)){
       if(trackName == "tbl.hiC.psychEncode.RData"){
          tbl.hiC <- get(load(system.file(package="TrenaProjectAD", "extdata", "genomeAnnotation", "tbl.hiC.psychEncode.RData")))
-         tbl.subC <- subset(tbl.hiC, geneSymbol == targetGene)
+         tbl.subC <- subset(tbl.hiC, toupper(geneSymbol) == toupper(targetGene))
          printf("--- loading %d rows from tbl.hiC for gene %s", nrow(tbl.subC), targetGene)
          title <- sprintf("PsychENCODE enhancers for %s", targetGene)
          msg <- sprintf("count: %d", nrow(tbl.subC))
@@ -146,7 +146,7 @@ displayTrack <- function(trenaProject, session, trackName)
       if(trackName == "geneHancer.v4.7.allGenes.RData"){
          f <- system.file(package="TrenaProject", "extdata", "genomeAnnotation", "geneHancer.v4.7.allGenes.RData")
          tbl.gh <- get(load(f))
-         tbl.ghSub <- subset(tbl.gh, geneSymbol == targetGene)
+         tbl.ghSub <- subset(tbl.gh, toupper(geneSymbol) == toupper(targetGene))
          loadBedGraphTrack(session, "GeneHancer", tbl.ghSub[, c(1:3,5)], color="maroon", autoscale=FALSE, min=0, max=50)
          } # genehancer
       return()
@@ -191,6 +191,7 @@ displayGWASTrack <- function(trenaProject, session, trackName)
 
    if(trackName %in% variantDatasetNames){
       printf("  --- found %s to display", trackName)
+      #browser()
       printf(" want to restrict variant table to this region: %s", state$chromLocRegion)
       loc <- parseChromLocString(state$chromLocRegion)
       tbl.variant <- getVariantDataset(trenaProject, trackName)
