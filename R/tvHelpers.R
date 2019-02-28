@@ -93,7 +93,7 @@ buildFootprintModel <- function(upstream, downstream)
                       motifDiscovery="builtinFimo",
                       tfPool=allKnownTFs(identifierType="geneSymbol"),
                       tfMapping="MotifDB",
-                      tfPrefilterCorrelation=0.1,
+                      tfPrefilterCorrelation=0.05,
                       annotationDbFile=dbfile(org.Hs.eg.db),
                       orderModelByColumn="pearsonCoeff",
                       solverNames=c("lasso", "lassopv", "pearson", "randomForest", "ridge", "spearman"))
