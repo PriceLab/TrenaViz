@@ -119,10 +119,10 @@ setMethod("setGenomicRegion", "BindingSitesManager",
      function(obj, tbl.region) {
         #if(all(tbl.region == obj@state$region))
         #   return()
-        printf("--- entering bsm:setGenomicRegion")
-        print(tbl.region)
+        #printf("--- entering bsm:setGenomicRegion")
+        #print(tbl.region)
         if(nrow(tbl.region) == 0) return()
-        print(tbl.region)
+        #print(tbl.region)
         new.roi <- with(tbl.region, sprintf("%s:%d-%d", chrom, start, end))
         new.region.requested <- !(all(tbl.region == obj@state$region))
         obj@state$region <- tbl.region

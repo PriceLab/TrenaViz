@@ -150,6 +150,8 @@ setMethod('createServer', 'TrenaViz',
       observeEvent(input$textInput_offListGene_widget_returnKey, ignoreInit=TRUE, {
          printf("--- textInput_offListGene_widget_returnKey event received")
          newGene <- isolate(input$textInput_offListGene)
+         if(getGenome(obj@project) == "hg38")
+            newGene <- toupper(newGene)
          legit <- recognizedGene(obj@project, newGene)
          if(!legit){
             msg <- sprintf("'%s' not found in current datasets.", newGene)
@@ -240,7 +242,7 @@ setMethod('createServer', 'TrenaViz',
       state[["chromLocRegion"]] <- new.region
       chromLoc <- trena::parseChromLocString(new.region)
       tbl.region <- with(chromLoc, data.frame(chrom=chrom, start=start, end=end, stringsAsFactors=FALSE))
-      printf("--- calling sgr(bsm) from TrenaViz:observeEvent, input$currentGenomicRegion")
+      #printf("--- calling sgr(bsm) from TrenaViz:observeEvent, input$currentGenomicRegion")
       setGenomicRegion(bsm, tbl.region)
       })
 
