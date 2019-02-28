@@ -4,14 +4,14 @@ setupIgvAndTableToggling <- function(session, input)
 {
    observeEvent(input$currentGenomicRegion, {
        newValue <- input$currentGenomicRegion
-       printf("newValue: %s", newValue)
-       printf("input$currentGenomicRegion: %s", input$currentGenomicRegion)
+       #printf("newValue: %s", newValue)
+       #printf("input$currentGenomicRegion: %s", input$currentGenomicRegion)
        if(newValue != state$chromLocRegion){
-          printf("new genomic regions: %s", newValue)
+          #printf("new genomic regions: %s", newValue)
           state$chromLocRegion <- newValue
           loc <- parseChromLocString(newValue)
           tbl.region <- with(loc, data.frame(chrom=chrom, start=start, end=end, stringsAsFactors=FALSE))
-          printf("--- calling sgr(bsm) from tvHelpers setupIgvAndTableToggling")
+          #printf("--- calling sgr(bsm) from tvHelpers setupIgvAndTableToggling")
           setGenomicRegion(bsm, tbl.region)
           }
        })
