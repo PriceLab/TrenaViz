@@ -2,6 +2,11 @@
 #------------------------------------------------------------------------------------------------------------------------
 setupIgvAndTableToggling <- function(session, input)
 {
+   observeEvent(input$trackClick, {
+      printf("TrenaViz, tvHelpers, trackClickEvent seen")
+      })
+
+
    observeEvent(input$currentGenomicRegion, {
        newValue <- input$currentGenomicRegion
        #printf("newValue: %s", newValue)

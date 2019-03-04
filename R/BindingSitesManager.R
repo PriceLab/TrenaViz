@@ -385,14 +385,19 @@ setMethod("addEventHandlers", "BindingSitesManager",
            printf("display tracks")
            next.color <- "purple"
            print(head(obj@state$motifHits))
-           tbl.bg <- obj@state$motifHits[, c("chrom", "start", "end", "score")]
-           #tbl.bg$score <- as.character(tbl.bg$score)
-           #tbl.bg$score <- as.integer(tbl.bg$score)
-           print(tbl.bg)
-           #loadBedTrack(session, sprintf("Bi-%s", obj@state$TF), tbl.bg, color=next.color, trackHeight=50)
+           motif <- isolate(input$motifChooser)
+           tbl.bed <- obj@state$motifHits[, c("chrom", "start", "end", "score")]
+           #browser()
+           tbl.bed$name <- motif
+           tbl.bed <- tbl.bed[, c("chrom", "start", "end", "name", "score")]
+           tbl.bed$score <- 20 * tbl.bed$score   # 0-1000 is the bed file range, inflate to that approximate range
+           #tbl.bed$score <- as.character(tbl.bed$score)
+           #tbl.bed$score <- as.integer(tbl.bed$score)
+           print(tbl.bed)
+           #loadBedTrack(session, sprintf("Bi-%s", obj@state$TF), tbl.bed, color=next.color, trackHeight=50)
            updateTabItems(session, "sidebarMenu", select="igvAndTable")
-           later(function(){loadBedGraphTrack(obj@state$session, obj@state$TF, tbl.bg,
-                                              color=next.color, trackHeight=50, autoscale=TRUE, quiet=FALSE)}, 1)
+           later(function(){loadBedTrack(obj@state$session, obj@state$TF, tbl.bed,
+                                         color=next.color, trackHeight=50, quiet=FALSE)}, 1)
            })
      }) # addEventHandlers
 
