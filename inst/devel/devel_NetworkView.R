@@ -35,7 +35,6 @@ networkView <- NetworkView("GATA2", tbl.model, tbl.regions, mtx)
    tabItem(tabName="networkViewTab",
            fluidPage(id="networkViewPage",
                      fluidRow(id="networkViewPageContent")))
-       #    column(width=12,cyjShinyOutput('cyjShiny', height=400)))))
 
 } # .createNetworkViewTab
 #------------------------------------------------------------------------------------------------------------------------
@@ -54,28 +53,15 @@ networkView <- NetworkView("GATA2", tbl.model, tbl.regions, mtx)
 } # .createBody
 #------------------------------------------------------------------------------------------------------------------------
 ui <- dashboardPage(
-
    dashboardHeader(title="NetworkView devel"),
    .createSidebar(),
    .createBody()
-
-)
+   )
 #------------------------------------------------------------------------------------------------------------------------
 server <- function(session, input, output)
 {
    printf("calling networkView::addEventHandlers")
    addEventHandlers(networkView, session, input, output)
-
-       #-----------------------------------------------------------------------------
-       # for testing only.   button is added to the ui by devel_NetworkView.R
-       #-----------------------------------------------------------------------------
-
-
-    output$cyjShiny <- renderCyjShiny({
-       cyjShiny(graph=graph.json, layoutName="preset")
-
-       })
-
 
 } # server
 #------------------------------------------------------------------------------------------------------------------------

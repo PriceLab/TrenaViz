@@ -17,18 +17,24 @@ library(cyjShiny)
                                 state="environment")
                                 )
 #------------------------------------------------------------------------------------------------------------------------
-tbl.nodes <- data.frame(id=c("A", "B", "C"),
-                        type=c("kinase", "TF", "glycoprotein"),
-                        lfc=c(1, 1, 1),
-                        count=c(0, 0, 0),
-                        stringsAsFactors=FALSE)
+setGeneric('getGraph',  signature='obj', function(obj) standardGeneric('getGraph'))
+#------------------------------------------------------------------------------------------------------------------------
+setMethod('getGraph', 'NetworkView',
 
-tbl.edges <- data.frame(source=c("A", "B", "C"),
-                        target=c("B", "C", "A"),
-                        interaction=c("phosphorylates", "synthetic lethal", "unknown"),
-                        stringsAsFactors=FALSE)
+   function(obj){
+     tbl.nodes <- data.frame(id=c("A", "B", "C"),
+                             type=c("kinase", "TF", "glycoprotein"),
+                             lfc=c(1, 1, 1),
+                             count=c(0, 0, 0),
+                             stringsAsFactors=FALSE)
+      tbl.edges <- data.frame(source=c("A", "B", "C"),
+                              target=c("B", "C", "A"),
+                              interaction=c("phosphorylates", "synthetic lethal", "unknown"),
+                              stringsAsFactors=FALSE)
+      graph.json <- dataFramesToJSON(tbl.edges, tbl.nodes)
+      return(graph.json)
+      })
 
-#graph.json <- dataFramesToJSON(tbl.edges, tbl.nodes)
 #------------------------------------------------------------------------------------------------------------------------
 #' Create an NetworkView object
 #'
@@ -71,7 +77,7 @@ setMethod("createPage", "NetworkView",
       function(obj) {
          div(id="bindingSitesManagerPageContent",
             extendShinyjs(script=system.file(package="TrenaViz", "js", "bindingSitesManager.js")),
-            h3("NetworkView::createPage")
+            cyjShinyOutput('cyjShiny', height=400)
             )
        })
 
@@ -119,7 +125,11 @@ setMethod("addEventHandlers", "NetworkView",
           printf("view network")
           updateTabItems(session, "sidebarMenu", selected="networkViewTab")
           displayPage(obj)
-          })
+          xyz <- "observing viewNetworkButton"
+          output$cyjShiny <- renderCyjShiny({
+             cyjShiny(getGraph(obj), layoutName="cola")
+             })
+        })
 
      }) # addEventHandlers
 
