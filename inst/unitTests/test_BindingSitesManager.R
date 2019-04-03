@@ -6,7 +6,7 @@ state <- new.env(parent=emptyenv())
 #----------------------------------------------------------------------------------------------------
 ui <- basicPage(
 
-  tags$head(tags$style(HTML('
+  shiny::tags$head(shiny::tags$style(HTML('
        .modal-body, .modal-content, .modal-dialog{
           width: 1200px;
           height: 1000px;
@@ -35,8 +35,11 @@ server <- function(input, output) {
       tf <- input$tfSelector
       if(nchar(tf) == 0) return();
       printf("tf: %s",   tf)
-      bsm <- BindingSitesManager(tf, "Hsapiens", "hg38") # , input, output)
+      #bsm <- BindingSitesManager(tf, "Hsapiens", "hg38") # , input, output)
+      bsm <- BindingSitesManager()
       state$bindingSitesManager <- bsm
+      setOrganism(bsm, "Hsapiens")
+      setGenome(bsm, "hg38")
       dialog <- createDialog(bsm)
       showModal(dialog)
      })

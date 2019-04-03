@@ -70,49 +70,49 @@ redrawModelDataTable <- function()
 
 } # redrawModelDataTable
 #------------------------------------------------------------------------------------------------------------------------
-buildFootprintModel <- function(upstream, downstream)
-{
-   tbl.gene <- subset(getTranscriptsTable(trenaProject), moleculetype=="gene")[1,]
-   tss <- tbl.gene$start
-   min.loc <- tss - upstream
-   max.loc <- tss + downstream
-
-   if(tbl.gene$strand == "-"){
-      tss <- tbl.gene$endpos
-      min.loc <- tss - downstream
-      max.loc <- tss + upstream
-      }
-
-   chrom <-tbl.gene$chr
-   tbl.regions <- data.frame(chrom=chrom, start=min.loc, end=max.loc, stringsAsFactors=FALSE)
-   mtx <- loadExpressionData(trenaProject, "FilteredLengthScaledTPM8282018-vsn")
-
-   build.spec <- list(title=sprintf("%s model %d", getTargetGene(trenaProject), 1),
-                      type="footprint.database",
-                      regions=tbl.regions,
-                      geneSymbol=getTargetGene(trenaProject),
-                      tss=tss,
-                      matrix=mtx,
-                      db.host="khaleesi.systemsbiology.net",
-                      databases=list("brain_hint_20"),
-                      motifDiscovery="builtinFimo",
-                      tfPool=allKnownTFs(identifierType="geneSymbol"),
-                      tfMapping="MotifDB",
-                      tfPrefilterCorrelation=0.05,
-                      annotationDbFile=dbfile(org.Hs.eg.db),
-                      orderModelByColumn="pearsonCoeff",
-                      solverNames=c("lasso", "lassopv", "pearson", "randomForest", "ridge", "spearman"))
-
-     #------------------------------------------------------------
-     # use the above build.spec: a small region, high correlation
-     # required, MotifDb for motif/tf lookup
-     #------------------------------------------------------------
-
-   fpBuilder <- FootprintDatabaseModelBuilder("hg38", getTargetGene(trenaProject), build.spec, quiet=TRUE)
-   x <- build(fpBuilder)
-   xyz <- "back from build"
-
-} # buildFootprintModel
+# buildFootprintModel <- function(upstream, downstream)
+# {
+#    tbl.gene <- subset(getTranscriptsTable(trenaProject), moleculetype=="gene")[1,]
+#    tss <- tbl.gene$start
+#    min.loc <- tss - upstream
+#    max.loc <- tss + downstream
+#
+#    if(tbl.gene$strand == "-"){
+#       tss <- tbl.gene$endpos
+#       min.loc <- tss - downstream
+#       max.loc <- tss + upstream
+#       }
+#
+#    chrom <-tbl.gene$chr
+#    tbl.regions <- data.frame(chrom=chrom, start=min.loc, end=max.loc, stringsAsFactors=FALSE)
+#    mtx <- loadExpressionData(trenaProject, "FilteredLengthScaledTPM8282018-vsn")
+#
+#    build.spec <- list(title=sprintf("%s model %d", getTargetGene(trenaProject), 1),
+#                       type="footprint.database",
+#                       regions=tbl.regions,
+#                       geneSymbol=getTargetGene(trenaProject),
+#                       tss=tss,
+#                       matrix=mtx,
+#                       db.host="khaleesi.systemsbiology.net",
+#                       databases=list("brain_hint_20"),
+#                       motifDiscovery="builtinFimo",
+#                       tfPool=allKnownTFs(identifierType="geneSymbol"),
+#                       tfMapping="MotifDB",
+#                       tfPrefilterCorrelation=0.05,
+#                       annotationDbFile=dbfile(org.Hs.eg.db),
+#                       orderModelByColumn="pearsonCoeff",
+#                       solverNames=c("lasso", "lassopv", "pearson", "randomForest", "ridge", "spearman"))
+#
+#      #------------------------------------------------------------
+#      # use the above build.spec: a small region, high correlation
+#      # required, MotifDb for motif/tf lookup
+#      #------------------------------------------------------------
+#
+#    fpBuilder <- FootprintDatabaseModelBuilder("hg38", getTargetGene(trenaProject), build.spec, quiet=TRUE)
+#    x <- build(fpBuilder)
+#    xyz <- "back from build"
+#
+# } # buildFootprintModel
 #------------------------------------------------------------------------------------------------------------------------
 setupAddTrack <- function(trenaProject, session, input, output)
 {
@@ -307,6 +307,7 @@ buildModel <- function(trenaProject, session, input, output)
    message(sprintf("about to build '%s'", model.name))
    # browser()
    # xyz <- "tvHelpders::buildModel"
+   footprint.database.host <- getFootprintDatabaseHost(trenaProject)
    footprint.database.names <- input$footprintDatabases
    tracks.to.intersect.with <- input$intersectWithRegions
    motifMapping <- isolate(input$motifMapping)
@@ -335,6 +336,7 @@ buildModel <- function(trenaProject, session, input, output)
                 tss,
                 expressionMatrixName,
                 tracks.to.intersect.with,
+                footprint.database.host,
                 footprint.database.names,
                 motifMapping)
 
@@ -346,6 +348,7 @@ run.trenaSGM <- function(trenaProject,
                          tss,
                          expression.matrix.name,
                          tracks.to.intersect.with,
+                         footprint.database.host,
                          footprint.database.names,
                          motifMapping)
 {
@@ -366,16 +369,18 @@ run.trenaSGM <- function(trenaProject,
                       geneSymbol=getTargetGene(trenaProject),
                       tss=tss,
                       matrix=mtx,
-                      db.host="khaleesi.systemsbiology.net",
+                      db.host=footprint.database.host,
                       databases=footprint.database.names,
                       motifDiscovery="builtinFimo",
                       tfPool=allKnownTFs(identifierType="geneSymbol"),
                       tfMapping=motifMapping,
-                      tfPrefilterCorrelation=0.2,
+                      tfPrefilterCorrelation=0.0,
                       annotationDbFile=dbfile(org.Hs.eg.db),
                       orderModelByColumn="pearsonCoeff",
                       solverNames=c("lasso", "lassopv", "pearson", "randomForest", "ridge", "spearman"))
-     # save(build.spec, file=sprintf("%s.buildSpec.RData", model.name))
+     build.spec.filename <- sprintf("%s.buildSpec.RData", model.name)
+     save(build.spec, file=build.spec.filename)
+     printf("--- saving build.spec: %s", build.spec.filename)
 
      #------------------------------------------------------------
      # use the above build.spec: a small region, high correlation

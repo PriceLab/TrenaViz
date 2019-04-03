@@ -3,6 +3,7 @@
 export(BindingSitesManager)
 export(MotifsInRegionsBuilder)
 export(MultiMethodMotifMatcher)
+export(NetworkView)
 export(TrenaViz)
 exportMethods(addEventHandlers)
 exportMethods(createApp)
