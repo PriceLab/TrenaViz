@@ -33,8 +33,7 @@ networkView <- NetworkView("GATA2", tbl.model, tbl.regions, mtx)
 .createNetworkViewTab <- function()
 {
    tabItem(tabName="networkViewTab",
-           fluidPage(id="networkViewPage",
-                     fluidRow(id="networkViewPageContent")))
+      div(cyjLayout(networkView), width=12))
 
 } # .createNetworkViewTab
 #------------------------------------------------------------------------------------------------------------------------
@@ -44,7 +43,7 @@ networkView <- NetworkView("GATA2", tbl.model, tbl.regions, mtx)
       includeCSS(system.file(package="TrenaViz", "css", "trenaViz.css")),
       includeCSS("cyjShiny.css"),
       useShinyjs(),
-      # extendShinyjs(script=system.file(package="TrenaViz", "js", "networkView.js")),
+      extendShinyjs(script=system.file(package="TrenaViz", "js", "networkView.js")),
       tabItems(
          .createMainTab(),
          .createNetworkViewTab()

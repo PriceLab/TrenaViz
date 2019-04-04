@@ -17,7 +17,31 @@ library(cyjShiny)
                                 state="environment")
                                 )
 #------------------------------------------------------------------------------------------------------------------------
+setGeneric("cyjLayout", signature='obj', function(obj) standardGeneric('cyjLayout'))
 setGeneric('getGraph',  signature='obj', function(obj) standardGeneric('getGraph'))
+#------------------------------------------------------------------------------------------------------------------------
+#'  provide html layout to the caller
+#'
+#' @rdname cyjLayout
+#' @aliases cyjLayout
+#'
+#' @param obj An object of class NetworkView
+#'
+#' @export
+#'
+setMethod('cyjLayout', 'NetworkView',
+
+    function(obj){
+       fluidPage(
+          fluidRow(
+             actionButton(inputId="fitNetworkButton", label="Fit"),
+             actionButton(inputId="fitSelectedNodesButton", label="Fit Selection"),
+             actionButton(inputId="removeNetworkButton", label="Remove Graph")
+             ),
+          fluidRow(column(width=12, cyjShinyOutput('cyjShiny')))
+          )
+       })
+
 #------------------------------------------------------------------------------------------------------------------------
 setMethod('getGraph', 'NetworkView',
 
@@ -75,8 +99,7 @@ NetworkView <- function(targetGene, tbl.model, tbl.regulatoryRegions, expression
 setMethod("createPage", "NetworkView",
 
       function(obj) {
-         div(id="bindingSitesManagerPageContent",
-            extendShinyjs(script=system.file(package="TrenaViz", "js", "bindingSitesManager.js")),
+         div(id="networkViewPageContent",
             cyjShinyOutput('cyjShiny', height=400)
             )
        })
@@ -96,7 +119,11 @@ setMethod("displayPage", "NetworkView",
 
      function(obj){
          printf("NetworkView displayPage")
-         insertUI(selector="#networkViewPageContent", where="afterEnd", createPage(obj), immediate=TRUE)
+         removeUI(selector="#networkViewPageContent", immediate=TRUE)
+         insertUI(selector="#networkViewPage", where="beforeEnd", createPage(obj), immediate=TRUE)
+         #js$cyjSetupResize();
+         js$cyjShinySetWidth();
+         later(function(){fit(session, 300)}, 1000)
          })
 
 #------------------------------------------------------------------------------------------------------------------------
@@ -121,13 +148,25 @@ setMethod("addEventHandlers", "NetworkView",
         obj@state$input <- input
         obj@state$output <- output
 
+        observeEvent(input$fitNetworkButton, ignoreInit=TRUE, {
+           fit(session, 80)
+           })
+
+        observeEvent(input$fitSelectedNodesButton, ignoreInit=TRUE, {
+           fitSelected(session, 80)
+           })
+
+        observeEvent(input$removeNetworkButton, ignoreInit=TRUE, {
+           removeGraph(session)
+           })
+
        observeEvent(input$viewNetworkButton, ignoreInit=FALSE, {
           printf("view network")
           updateTabItems(session, "sidebarMenu", selected="networkViewTab")
-          displayPage(obj)
+          # displayPage(obj)
           xyz <- "observing viewNetworkButton"
           output$cyjShiny <- renderCyjShiny({
-             cyjShiny(getGraph(obj), layoutName="cola")
+             cyjShiny(getGraph(obj), width=1000, height=1000, layoutName="cola")
              })
         })
 
