@@ -76,10 +76,13 @@ setMethod("matchMotifInSequence", "MultiMethodMotifMatcher",
              }
           if(nrow(tbl.out) == 0)
              return(data.frame())
-          tbl.out <- tbl.out[, c("chrom", "motifStart", "motifEnd", "strand", "motifScore")]
+          browser()
+          xyz <- "can we preserve percentage match?"
+          tbl.out <- tbl.out[, c("chrom", "motifStart", "motifEnd", "strand", "motifScore", "motifRelativeScore")]
           tbl.out$width <- with(tbl.out, 1 + motifEnd - motifStart)
-          colnames(tbl.out) <- c("chrom", "start", "end", "strand", "score", "width")
+          colnames(tbl.out) <- c("chrom", "start", "end", "strand", "score", "width", )
           tbl.out <- tbl.out[, c("chrom", "start", "end", "width", "strand", "score")]
+          tbl.out$chrom <- as.character(tbl.out$chrom)
           return(tbl.out)
           } # Biostrings
        if(obj@sequenceMatchAlgorithm == "MOODS matchMotifs"){

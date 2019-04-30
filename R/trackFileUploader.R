@@ -5,11 +5,11 @@ assessTableAndLoadTrack <- function(session, originalFilename, uploadedFilePath,
 
   tryCatch({
      tbl <- read.table(uploadedFilePath, sep="\t", as.is=TRUE, header=FALSE)
-     stopifnot(nrow(tbl) >= 1)
-     stopifnot(ncol(tbl) >= 3)
+     tbl[,1] <- as.character(tbl[,1]) # if chroms are, eg, "1", "2", they will come in as numerics.  we need characters
      if(nchar(trackName) == 0)
         trackName <- originalFilename
      if(trackType == "bed3"){
+        stopifnot(nrow(tbl) >= 1)
         stopifnot(ncol(tbl) >= 3)
         stopifnot(is.character(tbl[,1]))
         stopifnot(is.numeric(tbl[,2]))
@@ -18,6 +18,7 @@ assessTableAndLoadTrack <- function(session, originalFilename, uploadedFilePath,
         loadBedTrack(session, trackName, tbl, color=trackColor, trackHeight=50, deleteTracksOfSameName=TRUE, quiet=TRUE)
         }
      if(trackType == "bedGraph"){
+        tbl <- read.table(uploadedFilePath, sep="\t", as.is=TRUE, header=FALSE)
         stopifnot(ncol(tbl) >= 4)
         stopifnot(is.character(tbl[,1]))
         stopifnot(is.numeric(tbl[,2]))
