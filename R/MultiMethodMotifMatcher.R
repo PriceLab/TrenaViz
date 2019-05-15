@@ -79,7 +79,7 @@ setMethod("matchMotifInSequence", "MultiMethodMotifMatcher",
           xyz <- "can we preserve percentage match?"
           tbl.out <- tbl.out[, c("chrom", "motifStart", "motifEnd", "strand", "motifScore", "motifRelativeScore")]
           tbl.out$width <- with(tbl.out, 1 + motifEnd - motifStart)
-          colnames(tbl.out) <- c("chrom", "start", "end", "strand", "score", "width", )
+          colnames(tbl.out) <- c("chrom", "start", "end", "strand", "score", "relativeScore", "width")
           tbl.out <- tbl.out[, c("chrom", "start", "end", "width", "strand", "score")]
           tbl.out$chrom <- as.character(tbl.out$chrom)
           return(tbl.out)
