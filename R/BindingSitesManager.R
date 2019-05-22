@@ -315,9 +315,9 @@ setMethod("addEventHandlers", "BindingSitesManager",
         observeEvent(input$displayMotifsButton, ignoreInit=TRUE, {
            #js$installReturnHandler()
            #js$pageRed()
-           printf("-- about to enable and disable")
+           if(!obj@quiet) printf("-- about to enable and disable")
            output$motifRenderingPanel <- renderPlot({
-              printf("observing displayMotifsButton")
+              if(!obj@quiet) printf("observing displayMotifsButton")
               tfMapping <- isolate(input$tfMotifMappingOptions)
               xyz <- "just before render logos"
               renderLogos(obj, tfMapping)
@@ -326,28 +326,30 @@ setMethod("addEventHandlers", "BindingSitesManager",
 
         observeEvent(input$textInput_exploreAnotherTF_widget_returnKey, {
            new.tf <- isolate(input$textInput_exploreAnotherTF)
-           printf("explore this new TF: %s", new.tf)
+           if(!obj@quiet) printf("explore this new TF: %s", new.tf)
            if(nchar(new.tf) == 0) return();
            displayPage(obj, new.tf)
            })
 
         observeEvent(input$findMatchesButton, ignoreInit=TRUE, {
            motif <- isolate(input$motifChooser)
-           print(obj@state$region)
+           if(!obj@quiet) print(obj@state$region)
            output$motifMatchCountDisplay <- renderText({"   "})
            sequenceMatchAlgorithm <- isolate(input$matchAlgorithmChooser)
            matchThreshold <- isolate(input$biostringsMatchThresholdSlider)
            if(sequenceMatchAlgorithm == "MOODS matchMotifs")
               matchThreshold <- isolate(input$moodsMatchThresholdSlider)
            motif.matrix <- as.list(MotifDb[motif])
-           printf("--- matching motif against current sequence")
-           printf("    %s", sequenceMatchAlgorithm)
-           printf("    %f", matchThreshold)
-           printf("    %s", motif)
+           if(!obj@quiet){
+              printf("--- matching motif against current sequence")
+              printf("    %s", sequenceMatchAlgorithm)
+              printf("    %f", matchThreshold)
+              printf("    %s", motif)
+              }
            m4 <- MultiMethodMotifMatcher(obj@state$genome, motif.matrix, obj@state$region, sequenceMatchAlgorithm, matchThreshold)
            tbl.hits <- matchMotifInSequence(m4)
            rowCountAsString <- sprintf("%d", nrow(tbl.hits))
-           printf("hits: %s", rowCountAsString)
+           if(!obj@quiet) printf("hits: %s", rowCountAsString)
            output$motifMatchCountDisplay <- renderText({rowCountAsString})
            if(nrow(tbl.hits) == 0)
               shinyjs::disable("displayTrackButton")
@@ -370,7 +372,7 @@ setMethod("addEventHandlers", "BindingSitesManager",
 
         observeEvent(input$motifChooser, ignoreInit=FALSE, {
            currentValue <- input$motifChooser
-           printf("observer detects motifChooser event: '%s'", currentValue)
+           if(!obj@quiet) printf("observer detects motifChooser event: '%s'", currentValue)
            if(nchar(currentValue) == 0){
               shinyjs::disable("findMatchesButton")
               shinyjs::disable("displayTrackButton")
@@ -382,9 +384,9 @@ setMethod("addEventHandlers", "BindingSitesManager",
            })
 
         observeEvent(input$displayTrackButton, ignoreInit=TRUE, {
-           printf("display tracks")
+           if(!obj@quiet) printf("display tracks")
            next.color <- "purple"
-           print(head(obj@state$motifHits))
+           if(!obj@quiet) print(head(obj@state$motifHits))
            motif <- isolate(input$motifChooser)
            tbl.bed <- obj@state$motifHits[, c("chrom", "start", "end", "score")]
            #browser()
@@ -393,7 +395,6 @@ setMethod("addEventHandlers", "BindingSitesManager",
            tbl.bed$score <- 20 * tbl.bed$score   # 0-1000 is the bed file range, inflate to that approximate range
            #tbl.bed$score <- as.character(tbl.bed$score)
            #tbl.bed$score <- as.integer(tbl.bed$score)
-           print(tbl.bed)
            #loadBedTrack(session, sprintf("Bi-%s", obj@state$TF), tbl.bed, color=next.color, trackHeight=50)
            updateTabItems(session, "sidebarMenu", select="igvAndTable")
            later(function(){loadBedTrack(obj@state$session, obj@state$TF, tbl.bed,

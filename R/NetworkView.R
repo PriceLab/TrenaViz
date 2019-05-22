@@ -1,11 +1,13 @@
 #' import shiny
 #' import cyjShiny
+#' import TrenaProject
+#' import graph
 #' @name NetworkView
 #' @rdname NetworkView
 #' @aliases NetworkView
 #------------------------------------------------------------------------------------------------------------------------
-library(TrenaProject)
-library(cyjShiny)
+# library(TrenaProject)
+# library(cyjShiny)
 #------------------------------------------------------------------------------------------------------------------------
 .NetworkView <- setClass("NetworkView",
                              representation = representation(
@@ -36,7 +38,7 @@ setMethod('cyjLayout', 'NetworkView',
           fluidRow(
              actionButton(inputId="fitNetworkButton", label="Fit"),
              actionButton(inputId="fitSelectedNodesButton", label="Fit Selection"),
-             actionButton(inputId="removeNetworkButton", label="Remove Graph")
+             actionButton(inputId="removeNetworkButton", label="Remove Graph"),
              ),
           fluidRow(column(width=12, cyjShinyOutput('cyjShiny')))
           )
@@ -46,16 +48,23 @@ setMethod('cyjLayout', 'NetworkView',
 setMethod('getGraph', 'NetworkView',
 
    function(obj){
-     tbl.nodes <- data.frame(id=c("A", "B", "C"),
-                             type=c("kinase", "TF", "glycoprotein"),
-                             lfc=c(1, 1, 1),
-                             count=c(0, 0, 0),
-                             stringsAsFactors=FALSE)
+      tbl.nodes <- data.frame(id=c("A", "B", "C"),
+                              type=c("kinase", "TF", "glycoprotein"),
+                              lfc=c(1, 1, 1),
+                              count=c(0, 0, 0),
+                              stringsAsFactors=FALSE)
       tbl.edges <- data.frame(source=c("A", "B", "C"),
                               target=c("B", "C", "A"),
                               interaction=c("phosphorylates", "synthetic lethal", "unknown"),
                               stringsAsFactors=FALSE)
       graph.json <- dataFramesToJSON(tbl.edges, tbl.nodes)
+      targetGene <- obj@targetGene
+      tbl.model <- obj@tbl.model
+      tbl.reg <- obj@tbl.regulatoryRegions
+      g <- .geneRegulatoryModelToGraph(target.gene, tbl.model, tbl.reg)
+      printf("------- getGraph, model graph:")
+      print(g)
+      graph.json <- graphNELtoJSON(g)
       return(graph.json)
       })
 
@@ -87,6 +96,19 @@ NetworkView <- function(targetGene, tbl.model, tbl.regulatoryRegions, expression
 
 } # NetworkView
 #------------------------------------------------------------------------------------------------------------------------
+setMethod("show", "NetworkView",
+
+    function(object){
+        cat(paste("a NetworkView object from the TrenaViz package:", "\n"))
+        cat(sprintf("  targetGene: %s\n", obj@targetGene))
+        cat(sprintf("  tbl.model: %d rows, %d columns\n", nrow(obj@tbl.model), ncol(obj@tbl.model)))
+        cat(sprintf("  tbl.regulatoryRegions: %d rows, %d columns\n", nrow(obj@tbl.regulatoryRegions),
+                                                                      ncol(obj@tbl.regulatoryRegions)))
+        cat(sprintf("  expressionMatrix: %d rows, %d columns\n",      nrow(obj@expressionMatrix),
+                                                                      ncol(obj@expressionMatrix)))
+        })
+
+#------------------------------------------------------------------------------------------------------------------------
 #' create and return the control-rich UI
 #'
 #' @rdname createPage
@@ -99,9 +121,16 @@ NetworkView <- function(targetGene, tbl.model, tbl.regulatoryRegions, expression
 setMethod("createPage", "NetworkView",
 
       function(obj) {
-         div(id="networkViewPageContent",
-            cyjShinyOutput('cyjShiny', height=400)
-            )
+         fluidPage(id="networkViewPageContent",
+          fluidRow(
+             actionButton(inputId="fitNetworkButton", label="Fit"),
+             actionButton(inputId="fitSelectedNodesButton", label="Fit Selection"),
+             actionButton(inputId="removeNetworkButton", label="Remove Graph")
+             ),
+          fluidRow(column(width=12, cyjShinyOutput('cyjShiny')))
+          )
+        #cyjShinyOutput('cyjShiny', height=400)
+
        })
 
 #------------------------------------------------------------------------------------------------------------------------
@@ -166,7 +195,8 @@ setMethod("addEventHandlers", "NetworkView",
           # displayPage(obj)
           xyz <- "observing viewNetworkButton"
           output$cyjShiny <- renderCyjShiny({
-             cyjShiny(getGraph(obj), width=1000, height=1000, layoutName="cola")
+             printf("--- renderCyjShiny, triggered by viewNetworkButton")
+             cyjShiny(getGraph(obj), layoutName="cola", style_file=NULL, width=1000, height=1000)
              })
         })
 
@@ -175,9 +205,9 @@ setMethod("addEventHandlers", "NetworkView",
 #------------------------------------------------------------------------------------------------------------------------
 .geneRegulatoryModelToGraph <- function(target.gene, tbl.model, tbl.reg)
 {
-   browser()
    xyz <- ".geneRegulatoryModelToGraph"
 
+   browser()
    required.geneModelColumnNames <- c("tf", "pearson", "spearman", "betaLasso", "randomForest", "pcaMax", "concordance")
    required.regulatoryRegionsColumnNames <- c("motifName", "chrom", "motifStart", "motifEnd", "strand",
                                               "motifScore", "motifRelativeScore", "match",

@@ -1,6 +1,7 @@
 library(shiny)
 library(DT)
-printf <- function(...) print(noquote(sprintf(...)))
+#----------------------------------------------------------------------------------------------------
+# printf <- function(...) print(noquote(sprintf(...)))
 #----------------------------------------------------------------------------------------------------
 ui <- fluidPage(
       fluidRow(
@@ -19,8 +20,8 @@ server <- function(input, output)
    observeEvent(input$tableDisplay_rows_selected, {
       selectedTableRow <- isolate(input$tableDisplay_rows_selected)
       output$rowCountTextOutput <- renderText(sprintf("row %d", selectedTableRow))
-      printf("row click!");
-      printf("selectedTableRow: %d", selectedTableRow)
+      #printf("row click!");
+      #printf("selectedTableRow: %d", selectedTableRow)
       }) # observe row selection event
 
    observeEvent(input$displayTableButton, {
@@ -41,3 +42,6 @@ server <- function(input, output)
 } # server
 #----------------------------------------------------------------------------------------------------
 app <- shinyApp(ui, server)
+# enable this next line only for non-docker bash invocation use
+# runApp(app)
+

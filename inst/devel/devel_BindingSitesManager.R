@@ -5,8 +5,6 @@ library(shinyjs)
 #------------------------------------------------------------------------------------------------------------------------
 tbl.region <- data.frame(chrom="chr19", start=1036002, end=1142642, stringsAsFactors=FALSE)
 bsm <- BindingSitesManager()
-#bsm <- BindingSitesManager("Hsapiens", "hg38", tbl.region)
-# setGenomicRegion(bsm, tbl.region)
 genomicRegionString <- with(tbl.region, sprintf("%s:%d-%d", chrom, start, end))
 #------------------------------------------------------------------------------------------------------------------------
 .createSidebar <- function()

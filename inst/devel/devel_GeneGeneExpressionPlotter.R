@@ -2,17 +2,15 @@ library(shiny)
 library(shinydashboard)
 library(TrenaViz)
 library(shinyjs)
-library(cyjShiny)
 #------------------------------------------------------------------------------------------------------------------------
-load("gata2.model.RData")
-networkView <- NetworkView("GATA2", tbl.model, tbl.regions, mtx)
+plotter <- GeneGeneExpressionPlotter()
 #------------------------------------------------------------------------------------------------------------------------
 .createSidebar <- function()
 {
    dashboardSidebar(
    sidebarMenu(id="sidebarMenu",
-       menuItem("main",              tabName = "mainTab"),
-       menuItem("Network View",      tabName = "networkViewTab")
+       menuItem("main",                    tabName = "mainTab"),
+       menuItem("Plot Expression",         tabName = "expressionPlotTab")
        )
     )
 
@@ -22,46 +20,55 @@ networkView <- NetworkView("GATA2", tbl.model, tbl.regions, mtx)
 {
   tabItem(tabName="mainTab",
      div(
-        h5("Choose Regulatory Model:"),
-        selectInput("tfSelector", NULL,  c("", "GATA2")),
-        actionButton("viewNetworkButton", "View Network")
+        h5("Choose TF:"),
+        selectInput("tfSelector", NULL,  c("", "HES7", "LYL1", "IRF5", "SPI1", "CEBPA", "ELK3", "RUNX1")),
+        h5("Choose TargetGene:"),
+        selectInput("targetGeneSelector", NULL,  c("", "HES7", "LYL1", "IRF5", "SPI1", "CEBPA", "ELK3", "RUNX1")),
+        h5("Choose Expression Matrix:"),
+        selectInput("expressionMatrixSelector", NULL, c("", "AAAA", "BBB"))
+
         )
      )
 
 } # .createMainTab
 #------------------------------------------------------------------------------------------------------------------------
-.createNetworkViewTab <- function()
+.createExpressionPlotterTab <- function()
 {
-   printf("creating networkViewTab")
-   tabItem(tabName="networkViewTab",
-           createPage(networkView))
+   tabItem(tabName="expressionPlotTab",
+           fluidPage(id="expressionPlotPage",
+                     h3(id="expressionPlot_title", "Explore Correlated Gene Expression")))
 
-} # .createNetworkViewTab
+} # .createExpressionPlotterTab
 #------------------------------------------------------------------------------------------------------------------------
 .createBody <- function()
 {
    dashboardBody(
       includeCSS(system.file(package="TrenaViz", "css", "trenaViz.css")),
-      includeCSS("cyjShiny.css"),
       useShinyjs(),
-      extendShinyjs(script=system.file(package="TrenaViz", "js", "networkView.js")),
+      # extendShinyjs(script=system.file(package="TrenaViz", "js", "bindingSitesManager.js")),
       tabItems(
          .createMainTab(),
-         .createNetworkViewTab()
+         .createExpressionPlotterTab()
          ))
 
 } # .createBody
 #------------------------------------------------------------------------------------------------------------------------
 ui <- dashboardPage(
-   dashboardHeader(title="NetworkView devel"),
+
+   dashboardHeader(title="GeneGeneExpressionPlotter devel"),
    .createSidebar(),
    .createBody()
-   )
+
+)
 #------------------------------------------------------------------------------------------------------------------------
 server <- function(session, input, output)
 {
-   printf("calling networkView::addEventHandlers")
-   addEventHandlers(networkView, session, input, output)
+
+   addEventHandlers(plotter, session, input, output)
+
+       #-----------------------------------------------------------------------------
+       # for testing only.   button is added to the ui by devel_GeneGeneExpressionPlotter.R
+       #-----------------------------------------------------------------------------
 
 } # server
 #------------------------------------------------------------------------------------------------------------------------
