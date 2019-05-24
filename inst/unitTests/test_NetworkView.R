@@ -1,17 +1,24 @@
 library(TrenaViz)
 library(RUnit)
+library(graph)
+
 if(!exists("tv")){
-   tv <- TrenaViz()
+   tv <- TrenaViz("TrenaProjectLymphocyte")
+   tp <- TrenaProjectLymphocyte()
    load("gata2.model.RData")
+   }
 #------------------------------------------------------------------------------------------------------------------------
 runTests <- function()
 {
    test_.standardizeModelTable()
+   test_.standardizeRegulatoryRegionsTable()
 
 } # runTests
 #------------------------------------------------------------------------------------------------------------------------
 test_.standardizeModelTable <- function()
 {
+   printf("--- test_.standardizeModelTable")
+
    #-----------------------------------------------------------------------------------------
    # the incoming tbl.model presents these challenges:
    #
@@ -29,7 +36,7 @@ test_.standardizeModelTable <- function()
    #  97 ZNF263  0.9003067  0.6360153         0     2.134046
    #  70  PRDM4  0.8984506  0.7405583         0     1.900193
 
-   tbl.std <- .standardizeModelTable(tbl.model)
+   tbl.std <- TrenaViz:::.standardizeModelTable(tbl.model)
    checkEquals(dim(tbl.std), c(nrow(tbl.model), 5))
    checkEquals(colnames(tbl.std), c("tf", "pearson", "spearman", "betaLasso", "randomForest"))
    checkEquals(tbl.model$gene, tbl.std$tf)
@@ -46,13 +53,31 @@ test_.standardizeRegulatoryRegionsTable <- function()
    tp <- TrenaProjectErythropoiesis()
    tss <- getTranscriptsTable(tp, "GATA2")$start
    targetGene <- "GATA2"
-   tbl.std <- .standardizeRegulatoryRegionsTable(tbl.regions, targetGene, tss)
+   tbl.std <- TrenaViz:::.standardizeRegulatoryRegionsTable(tbl.regions, targetGene, tss)
    checkEquals(nrow(tbl.regions), nrow(tbl.std))
    checkEquals(tbl.regions$geneSymbol, tbl.std$tf)
    checkEquals(tbl.regions$fp_start, tbl.std$start)
    checkTrue(all(tbl.std$targetGene == targetGene))
 
 } # test_.standardizeRegulatoryRegionsTable
+#------------------------------------------------------------------------------------------------------------------------
+test_.geneRegulatoryModelToGraph <- function()
+{
+   printf("--- test_.geneRegulatoryModelToGraph")
+
+   f <- system.file(package="TrenaViz", "extdata", "model.and.regRegions.irf4.top5.RData")
+   print(load(f))
+   tbl.model.std <- TrenaViz:::.standardizeModelTable(tbl.model)
+
+   targetGene <- "IRF4"
+   tss <- getTranscriptsTable(tp, targetGene)$start
+   tbl.reg.std <- TrenaViz:::.standardizeRegulatoryRegionsTable(tbl.reg, targetGene, tss)
+
+   #g <- .geneRegulatoryModelToGraph(targetGene, tbl.model.std, tbl.reg.std)
+   g <- TrenaViz:::.geneRegulatoryModelToGraph(targetGene, tbl.model.std, tbl.reg.std)
+
+
+} # test_.geneRegulatoryModelToGraph
 #------------------------------------------------------------------------------------------------------------------------
 # test_multiple.geneRegulatoryModelsToGraph <- function(display=FALSE)
 # {

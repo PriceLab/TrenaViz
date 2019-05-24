@@ -203,21 +203,144 @@ setMethod("addEventHandlers", "NetworkView",
      }) # addEventHandlers
 
 #------------------------------------------------------------------------------------------------------------------------
+# by example:
+#
+# the incoming tbl.model presents these challenges:
+#
+#       gene betaLasso  lassoPValue pearsonCoeff  rfScore   betaRidge spearmanCoeff bindingSites
+#  6    E2F3         0 7.124847e-07    0.8683105 2.936714  0.04945335     0.8149973           NA
+#  45 HOXC13         0 3.987483e-02   -0.8640875 2.457541 -0.01531601    -0.7659080           NA
+#  97 ZNF263         0 6.236969e-01    0.9003067 2.134046  0.04104303     0.6360153           NA
+#  70  PRDM4         0 1.000000e+00    0.8984506 1.900193  0.03627523     0.7405583           NA
+#
+# and for which we want these results (first 4 rows only)
+#
+#         tf    pearson   spearman betaLasso randomForest
+#  6    E2F3  0.8683105  0.8149973         0     2.936714
+#  45 HOXC13 -0.8640875 -0.7659080         0     2.457541
+#  97 ZNF263  0.9003067  0.6360153         0     2.134046
+#  70  PRDM4  0.8984506  0.7405583         0     1.900193
+
+.standardizeModelTable <- function(tbl.model)
+{
+   required.colNames <- c("tf", "pearson", "spearman", "betaLasso", "randomForest")
+   colnames.in <- tolower(colnames(tbl.model))
+   gene.col <- grep("^gene$", colnames.in)
+
+   if(length(gene.col) > 0)
+      colnames(tbl.model)[gene.col] <- "tf"
+
+   pearson.col <- grep("pearson", colnames.in)
+   if(length(pearson.col) > 0)
+      colnames(tbl.model)[pearson.col] <- "pearson"
+
+   spearman.col <- grep("spearman", colnames.in)
+   if(length(spearman.col) > 0)
+      colnames(tbl.model)[spearman.col] <- "spearman"
+
+   betaLasso.col <- grep("betalasso", colnames.in)
+   if(length(betaLasso.col) > 0)
+      colnames(tbl.model)[betaLasso.col] <- "betaLasso"
+
+   rf.1.col <- grep("forest", colnames.in)
+   rf.2.col <- grep("rfscore", colnames.in)
+
+   if(length(rf.1.col) > 0)
+      colnames(tbl.model)[rf.1.col] <- "randomForest"
+
+   if(length(rf.2.col) > 0)
+      colnames(tbl.model)[rf.2.col] <- "randomForest"
+
+   tbl.out <- tbl.model[, required.colNames]
+   tbl.out
+
+} # .standardizeModelTable
+#------------------------------------------------------------------------------------------------------------------------
+# by example:
+#
+# one instance of the incoming tbl.reg presents these challenges:
+#
+#                                motifName                      loc  fp_start    fp_end               type                                     name length strand   sample_id method                provenance score1   score2   score3 score4 score5 score6 chrom            database          shortMotif geneSymbol pubmedID organism  source
+# Hsapiens-HOCOMOCOv10-CLOCK_HUMAN.H10MO.D chr3:128077447-128077466 128077441 128077451 motif.in.footprint Hsapiens-HOCOMOCOv10-CLOCK_HUMAN.H10MO.D     20      + ENCSR000EMT   HINT lymphoblast_hint_16.minid     12 13.02250 1.81e-05     NA     NA     NA  chr3 lymphoblast_hint_16 CLOCK_HUMAN.H10MO.D      CLOCK 26586801 Hsapiens MotifDb
+#  Hsapiens-HOCOMOCOv10-PURA_HUMAN.H10MO.D chr3:128417965-128417981 128417972 128417989 motif.in.footprint  Hsapiens-HOCOMOCOv10-PURA_HUMAN.H10MO.D     17      - ENCSR000EJK   HINT lymphoblast_hint_20.minid     12 12.04400 3.25e-05     NA     NA     NA  chr3 lymphoblast_hint_20  PURA_HUMAN.H10MO.D       PURA 26586801 Hsapiens MotifDb
+#      Hsapiens-jaspar2016-HOXC11-MA0651.1 chr3:128617604-128617614 128617598 128617621 motif.in.footprint      Hsapiens-jaspar2016-HOXC11-MA0651.1     11      - ENCSR000DBZ   HINT lymphoblast_hint_20.minid     32 11.10000 7.99e-05     NA     NA     NA  chr3 lymphoblast_hint_20            MA0651.1     HOXC11 24194598 Hsapiens MotifDb
+#         Hsapiens-jaspar2016-SP4-MA0685.1 chr3:128487237-128487253 128487253 128487267 motif.in.footprint         Hsapiens-jaspar2016-SP4-MA0685.1     17      - ENCSR000EJE   HINT lymphoblast_hint_16.minid     24  4.01124 8.85e-05     NA     NA     NA  chr3 lymphoblast_hint_16            MA0685.1        SP4 24194598 Hsapiens MotifDb
+#      Hsapiens-jaspar2016-ZBTB7A-MA0750.1 chr3:128617856-128617867 128617847 128617892 motif.in.footprint      Hsapiens-jaspar2016-ZBTB7A-MA0750.1     12      + ENCSR000DCA   HINT lymphoblast_hint_16.minid     20 15.76400 2.28e-06     NA     NA     NA  chr3 lymphoblast_hint_16            MA0750.1     ZBTB7A 24194598 Hsapiens MotifDb
+#
+# from which we wish to extract:
+#
+
+#   chrom     start       end  tf                                  motif
+# 1  chr3 128483072 128483461 MAZ Hsapiens-HOCOMOCOv10-MAZ_HUMAN.H10MO.A
+# 2  chr3 128483072 128483461 SP4 Hsapiens-HOCOMOCOv10-SP4_HUMAN.H10MO.D
+# 3  chr3 128483072 128483461 SP2 Hsapiens-HOCOMOCOv10-SP2_HUMAN.H10MO.C
+# 4  chr3 128483072 128483461 SP3 Hsapiens-HOCOMOCOv10-SP3_HUMAN.H10MO.B
+# 5  chr3 128483072 128483461 SP3 Hsapiens-SwissRegulon-SP3.SwissRegulon
+# 6  chr3 128483072 128483461 SP1 Hsapiens-HOCOMOCOv10-SP1_HUMAN.H10MO.C
+#
+# and we want
+#  chrom      start       end name distance motifName
+#   chr3  128483072 128483461 MAZ Hsapiens-HOCOMOCOv10-MAZ_HUMAN.H10MO.A
+
+#
+#    regRegions.names <- unlist(lapply(1:nrow(tbl.reg), function(i){
+#        distance.from.tss <- tbl.reg$distance.from.tss[i]
+#        region.size <- nchar(tbl.reg$match[i])
+#        motif.name <- tbl.reg$motifName[i]
+#        if(distance.from.tss < 0)
+#           sprintf("%s.fp.downstream.%05d.L%d.%s", target.gene, abs(distance.from.tss), region.size, motif.name)
+#         else
+#           sprintf("%s.fp.upstream.%05d.L%d.%s", target.gene, abs(distance.from.tss), region.size, motif.name)
+#         }))
+#
+#    tbl.reg$regionName <- regRegions.names
+#    all.nodes <- unique(c(target.gene, tfs, regRegions.names))
+#    g <- addNode(all.nodes, g)
+#
+#    nodeData(g, target.gene, "type") <- "targetGene"
+#    nodeData(g, tfs, "type")         <- "TF"
+#    nodeData(g, regRegions.names, "type")  <- "regulatoryRegion"
+#    nodeData(g, all.nodes, "label")  <- all.nodes
+#    nodeData(g, regRegions.names, "label") <- tbl.reg$motifName
+#    nodeData(g, regRegions.names, "distance") <- tbl.reg$distance
+#    nodeData(g, regRegions.names, "motif") <- tbl.reg$motifName
+#
+.standardizeRegulatoryRegionsTable <- function(tbl.reg, targetGene, tss)
+{
+   locs <- lapply(tbl.reg$loc, parseChromLocString)
+   tbl.rough <- do.call(rbind, lapply(locs, as.data.frame))
+   tbl.rough$chrom <- as.character(tbl.rough$chrom)
+
+   tbl.rough <- cbind(tbl.rough, tbl.reg[, c("motifName", "fp_start", "fp_end", "geneSymbol")])
+   make.name <- function(tss, start, tf){
+      distance.from.tss <- tss - start
+      sprintf("%s:%d:%s", targetGene, distance.from.tss, tf)
+      }
+
+   regulatory.region.names <- unlist(lapply(1:nrow(tbl.reg),
+                                     function(i) make.name(tss, tbl.rough$fp_start[i], tbl.rough$geneSymbol[i])))
+   tbl.rough$name <- regulatory.region.names
+   tbl.rough$distance <- tss - tbl.rough$fp_start
+   tbl.rough$targetGene <- targetGene
+
+   tbl.out <- tbl.rough[, c("chrom", "fp_start", "fp_end", "distance", "name", "targetGene", "geneSymbol", "motifName")]
+   colnames(tbl.out) <- c("chrom", "start", "end", "distance", "name", "targetGene", "tf", "motif")
+   rownames(tbl.out) <- NULL
+   tbl.out
+
+} # .standardizeRegulatoryRegionsTable
+#------------------------------------------------------------------------------------------------------------------------
 .geneRegulatoryModelToGraph <- function(target.gene, tbl.model, tbl.reg)
 {
    xyz <- ".geneRegulatoryModelToGraph"
 
-   browser()
-   required.geneModelColumnNames <- c("tf", "pearson", "spearman", "betaLasso", "randomForest", "pcaMax", "concordance")
-   required.regulatoryRegionsColumnNames <- c("motifName", "chrom", "motifStart", "motifEnd", "strand",
-                                              "motifScore", "motifRelativeScore", "match",
-                                              "distance.from.tss",
-                                              "chromStart", "chromEnd", "seq", "status", "tf")
+   required.geneModelColumnNames <- c("tf", "pearson", "spearman", "betaLasso", "randomForest")
+   required.regulatoryRegionsColumnNames <- c("chrom", "start", "end", "distance", "name", "targetGene", "tf", "motif")
    stopifnot(all(required.geneModelColumnNames %in% colnames(tbl.model)))
    stopifnot(all(required.regulatoryRegionsColumnNames %in% colnames(tbl.reg)))
 
-   printf("genes: %d, %d occurences of %d motifs", length(tbl.model$tf), length(tbl.reg$motifName),
-          length(unique(tbl.reg$motifName)))
+   printf("genes: %d, %d occurences of %d motifs", length(tbl.model$tf), length(tbl.reg$motif),
+          length(unique(tbl.reg$motif)))
 
    g <- graphNEL(edgemode = "directed")
 
@@ -226,8 +349,6 @@ setMethod("addEventHandlers", "NetworkView",
    nodeDataDefaults(g, attr = "distance") <- 0
    nodeDataDefaults(g, attr = "pearson") <- 0
    nodeDataDefaults(g, attr = "randomForest") <- 0
-   nodeDataDefaults(g, attr = "pcaMax") <- 0
-   nodeDataDefaults(g, attr = "concordance") <- 0
    nodeDataDefaults(g, attr = "betaLasso") <- 0
    nodeDataDefaults(g, attr = "motif") <- ""
    nodeDataDefaults(g, attr = "xPos") <- 0
@@ -237,40 +358,26 @@ setMethod("addEventHandlers", "NetworkView",
 
    tfs <- tbl.model$tf
 
-   regRegions.names <- unlist(lapply(1:nrow(tbl.reg), function(i){
-       distance.from.tss <- tbl.reg$distance.from.tss[i]
-       region.size <- nchar(tbl.reg$match[i])
-       motif.name <- tbl.reg$motifName[i]
-       if(distance.from.tss < 0)
-          sprintf("%s.fp.downstream.%05d.L%d.%s", target.gene, abs(distance.from.tss), region.size, motif.name)
-        else
-          sprintf("%s.fp.upstream.%05d.L%d.%s", target.gene, abs(distance.from.tss), region.size, motif.name)
-        }))
-
-   tbl.reg$regionName <- regRegions.names
-   all.nodes <- unique(c(target.gene, tfs, regRegions.names))
+   all.nodes <- unique(c(target.gene, tfs, tbl.reg$name))
    g <- addNode(all.nodes, g)
 
    nodeData(g, target.gene, "type") <- "targetGene"
    nodeData(g, tfs, "type")         <- "TF"
-   nodeData(g, regRegions.names, "type")  <- "regulatoryRegion"
+   nodeData(g, tbl.reg$name, "type")  <- "regulatoryRegion"
    nodeData(g, all.nodes, "label")  <- all.nodes
-   nodeData(g, regRegions.names, "label") <- tbl.reg$motifName
-   nodeData(g, regRegions.names, "distance") <- tbl.reg$distance
-   nodeData(g, regRegions.names, "motif") <- tbl.reg$motifName
+   nodeData(g, tbl.reg$name, "label") <- tbl.reg$motifName
+   nodeData(g, tbl.reg$name, "distance") <- tbl.reg$distance
+   nodeData(g, tbl.reg$name, "motif") <- tbl.reg$motifName
 
    nodeData(g, tfs, "pearson") <- tbl.model$pearson
    nodeData(g, tfs, "betaLasso") <- tbl.model$betaLasso
    nodeData(g, tfs, "randomForest") <- tbl.model$randomForest
-   nodeData(g, tfs, "pcaMax") <- tbl.model$pcaMax
-   nodeData(g, tfs, "concordance") <- tbl.model$concordance
 
-   #browser()
-   g <- addEdge(tbl.reg$tf, tbl.reg$regionName, g)
-   edgeData(g,  tbl.reg$tf, tbl.reg$regionName, "edgeType") <- "bindsTo"
+   g <- addEdge(tbl.reg$tf, tbl.reg$name, g)
+   edgeData(g,  tbl.reg$tf, tbl.reg$name, "edgeType") <- "bindsTo"
 
-   g <- graph::addEdge(tbl.reg$regionName, target.gene, g)
-   edgeData(g, tbl.reg$regionName, target.gene, "edgeType") <- "regulatorySiteFor"
+   g <- graph::addEdge(tbl.reg$name, target.gene, g)
+   edgeData(g, tbl.reg$name, target.gene, "edgeType") <- "regulatorySiteFor"
 
    g
 
