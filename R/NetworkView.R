@@ -13,6 +13,7 @@
                              representation = representation(
                                 quiet="logical",
                                 targetGene="character",
+                                tss="numeric",
                                 tbl.model="data.frame",
                                 tbl.regulatoryRegions="data.frame",
                                 expressionMatrix="matrix",
@@ -61,7 +62,8 @@ setMethod('getGraph', 'NetworkView',
       targetGene <- obj@targetGene
       tbl.model <- obj@tbl.model
       tbl.reg <- obj@tbl.regulatoryRegions
-      g <- .geneRegulatoryModelToGraph(target.gene, tbl.model, tbl.reg)
+      tss <- obj@tss
+      g <- .geneRegulatoryModelToGraph(targetGene, tbl.model, tbl.reg)
       printf("------- getGraph, model graph:")
       print(g)
       graph.json <- graphNELtoJSON(g)
@@ -288,16 +290,16 @@ setMethod("addEventHandlers", "NetworkView",
 #        region.size <- nchar(tbl.reg$match[i])
 #        motif.name <- tbl.reg$motifName[i]
 #        if(distance.from.tss < 0)
-#           sprintf("%s.fp.downstream.%05d.L%d.%s", target.gene, abs(distance.from.tss), region.size, motif.name)
+#           sprintf("%s.fp.downstream.%05d.L%d.%s", targetGene, abs(distance.from.tss), region.size, motif.name)
 #         else
-#           sprintf("%s.fp.upstream.%05d.L%d.%s", target.gene, abs(distance.from.tss), region.size, motif.name)
+#           sprintf("%s.fp.upstream.%05d.L%d.%s", targetGene, abs(distance.from.tss), region.size, motif.name)
 #         }))
 #
 #    tbl.reg$regionName <- regRegions.names
-#    all.nodes <- unique(c(target.gene, tfs, regRegions.names))
+#    all.nodes <- unique(c(targetGene, tfs, regRegions.names))
 #    g <- addNode(all.nodes, g)
 #
-#    nodeData(g, target.gene, "type") <- "targetGene"
+#    nodeData(g, targetGene, "type") <- "targetGene"
 #    nodeData(g, tfs, "type")         <- "TF"
 #    nodeData(g, regRegions.names, "type")  <- "regulatoryRegion"
 #    nodeData(g, all.nodes, "label")  <- all.nodes
@@ -330,10 +332,12 @@ setMethod("addEventHandlers", "NetworkView",
 
 } # .standardizeRegulatoryRegionsTable
 #------------------------------------------------------------------------------------------------------------------------
-.geneRegulatoryModelToGraph <- function(target.gene, tbl.model, tbl.reg)
+.geneRegulatoryModelToGraph <- function(targetGene, tss, tbl.model, tbl.reg)
 {
    xyz <- ".geneRegulatoryModelToGraph"
 
+   tbl.model <- .standardizeModelTable(tbl.model)
+   tbl.reg <- .standardizeRegulatoryRegionsTable(tbl.reg, targetGene, tss)
    required.geneModelColumnNames <- c("tf", "pearson", "spearman", "betaLasso", "randomForest")
    required.regulatoryRegionsColumnNames <- c("chrom", "start", "end", "distance", "name", "targetGene", "tf", "motif")
    stopifnot(all(required.geneModelColumnNames %in% colnames(tbl.model)))
@@ -358,10 +362,10 @@ setMethod("addEventHandlers", "NetworkView",
 
    tfs <- tbl.model$tf
 
-   all.nodes <- unique(c(target.gene, tfs, tbl.reg$name))
+   all.nodes <- unique(c(targetGene, tfs, tbl.reg$name))
    g <- addNode(all.nodes, g)
 
-   nodeData(g, target.gene, "type") <- "targetGene"
+   nodeData(g, targetGene, "type") <- "targetGene"
    nodeData(g, tfs, "type")         <- "TF"
    nodeData(g, tbl.reg$name, "type")  <- "regulatoryRegion"
    nodeData(g, all.nodes, "label")  <- all.nodes
@@ -376,10 +380,68 @@ setMethod("addEventHandlers", "NetworkView",
    g <- addEdge(tbl.reg$tf, tbl.reg$name, g)
    edgeData(g,  tbl.reg$tf, tbl.reg$name, "edgeType") <- "bindsTo"
 
-   g <- graph::addEdge(tbl.reg$name, target.gene, g)
-   edgeData(g, tbl.reg$name, target.gene, "edgeType") <- "regulatorySiteFor"
+   g <- graph::addEdge(tbl.reg$name, targetGene, g)
+   edgeData(g, tbl.reg$name, targetGene, "edgeType") <- "regulatorySiteFor"
 
    g
 
 } # .geneRegulatoryModelToGraph
+#------------------------------------------------------------------------------------------------------------------------
+.addGeneModelLayout <- function(g, xPos.span=1500)
+{
+    all.distances <- sort(unique(unlist(nodeData(g, attr='distance'), use.names=FALSE)))
+    print(all.distances)
+
+    fp.nodes <- nodes(g)[which(unlist(nodeData(g, attr="type"), use.names=FALSE) == "regulatoryRegion")]
+    tf.nodes <- nodes(g)[which(unlist(nodeData(g, attr="type"), use.names=FALSE) == "TF")]
+    targetGene.nodes <- nodes(g)[which(unlist(nodeData(g, attr="type"), use.names=FALSE) == "targetGene")]
+
+     # add in a zero in case all of the footprints are up or downstream of the 0 coordinate, the TSS
+    span.endpoints <- range(c(0, as.numeric(nodeData(g, fp.nodes, attr="distance"))))
+    span <- max(span.endpoints) - min(span.endpoints)
+    footprintLayoutFactor <- 1
+    printf("initial:  span: %d  footprintLayoutFactor: %f", span, footprintLayoutFactor)
+
+    footprintLayoutFactor <- xPos.span/span
+
+    #if(span < 600)  #
+    #   footprintLayoutFactor <- 600/span
+    #if(span > 1000)
+    #   footprintLayoutFactor <- span/1000
+
+    printf("corrected:  span: %d  footprintLayoutFactor: %f", span, footprintLayoutFactor)
+
+    xPos <- as.numeric(nodeData(g, fp.nodes, attr="distance")) * footprintLayoutFactor
+    yPos <- 0
+    nodeData(g, fp.nodes, "xPos") <- xPos
+    nodeData(g, fp.nodes, "yPos") <- yPos
+
+    adjusted.span.endpoints <- range(c(0, as.numeric(nodeData(g, fp.nodes, attr="xPos"))))
+    printf("raw span of footprints: %d   footprintLayoutFactor: %f  new span: %8.0f",
+           span, footprintLayoutFactor, abs(max(adjusted.span.endpoints) - min(adjusted.span.endpoints)))
+
+    tfs <- names(which(nodeData(g, attr="type") == "TF"))
+
+    for(tf in tfs){
+       footprint.neighbors <- edges(g)[[tf]]
+       if(length(footprint.neighbors) > 0){
+          footprint.positions <- as.integer(nodeData(g, footprint.neighbors, attr="xPos"))
+          new.xPos <- mean(footprint.positions)
+          if(is.na(new.xPos)) browser()
+          if(is.nan(new.xPos)) browser()
+          #printf("%8s: %5d", tf, new.xPos)
+          }
+       else{
+          new.xPos <- 0
+          }
+       nodeData(g, tf, "yPos") <- sample(300:1200, 1)
+       nodeData(g, tf, "xPos") <- new.xPos
+       } # for tf
+
+    nodeData(g, targetGene.nodes, "xPos") <- 0
+    nodeData(g, targetGene.nodes, "yPos") <- -200
+
+    g
+
+} # .addGeneModelLayout
 #------------------------------------------------------------------------------------------------------------------------

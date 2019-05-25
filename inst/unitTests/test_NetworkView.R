@@ -12,6 +12,8 @@ runTests <- function()
 {
    test_.standardizeModelTable()
    test_.standardizeRegulatoryRegionsTable()
+   test_.geneRegulatoryModelToGraph()
+   test_.addGeneModelLayout()
 
 } # runTests
 #------------------------------------------------------------------------------------------------------------------------
@@ -67,18 +69,54 @@ test_.geneRegulatoryModelToGraph <- function()
 
    f <- system.file(package="TrenaViz", "extdata", "model.and.regRegions.irf4.top5.RData")
    print(load(f))
-   tbl.model.std <- TrenaViz:::.standardizeModelTable(tbl.model)
 
    targetGene <- "IRF4"
    tss <- getTranscriptsTable(tp, targetGene)$start
-   tbl.reg.std <- TrenaViz:::.standardizeRegulatoryRegionsTable(tbl.reg, targetGene, tss)
+   g <- TrenaViz:::.geneRegulatoryModelToGraph(targetGene, tss, tbl.model, tbl.reg)
 
-   #g <- .geneRegulatoryModelToGraph(targetGene, tbl.model.std, tbl.reg.std)
-   g <- TrenaViz:::.geneRegulatoryModelToGraph(targetGene, tbl.model.std, tbl.reg.std)
-
+   checkEquals(sort(names(nodeDataDefaults(g))), c("betaLasso",   "distance",    "label",
+                                                   "motif",       "pearson",     "randomForest",
+                                                   "type",        "xPos",        "yPos"))
+   checkEquals(sort(names(edgeDataDefaults(g))), "edgeType")
+   checkEquals(length(nodes(g)), 13)
+   checkEquals(length(names(edgeData(g, attr="edgeType"))), 14)
+   expected.nodes <- c("IRF4", "IRF4:-51:PAX5", "IRF4:-76:MGA", "IRF4:1320:ZBTB4", "IRF4:1819:MAF",
+                       "IRF4:1986:MGA", "IRF4:295:MGA", "IRF4:397:RFX5", "MAF", "MGA", "PAX5", "RFX5", "ZBTB4")
+   checkEquals(sort(nodes(g)), expected.nodes)
+   checkEquals(sort(unique(unlist(edgeData(g, attr="edgeType"), use.names=FALSE))),
+               c("bindsTo", "regulatorySiteFor"))
+   expected.edgeNames <- c("IRF4:-51:PAX5|IRF4",   "IRF4:-76:MGA|IRF4",
+                           "IRF4:1320:ZBTB4|IRF4", "IRF4:1819:MAF|IRF4",
+                           "IRF4:1986:MGA|IRF4",   "IRF4:295:MGA|IRF4",
+                           "IRF4:397:RFX5|IRF4",   "MAF|IRF4:1819:MAF",
+                           "MGA|IRF4:-76:MGA",     "MGA|IRF4:1986:MGA",
+                           "MGA|IRF4:295:MGA",     "PAX5|IRF4:-51:PAX5",
+                           "RFX5|IRF4:397:RFX5",   "ZBTB4|IRF4:1320:ZBTB4")
+   checkEquals(sort(names(edgeData(g, attr="edgeType"))), expected.edgeNames)
 
 } # test_.geneRegulatoryModelToGraph
 #------------------------------------------------------------------------------------------------------------------------
+test_.addGeneModelLayout <- function(g, xPos.span=1500)
+{
+   printf("--- test_.addGeneModelLayout")
+   f <- system.file(package="TrenaViz", "extdata", "model.and.regRegions.irf4.top5.RData")
+   load(f)
+
+   targetGene <- "IRF4"
+   tss <- getTranscriptsTable(tp, targetGene)$start
+   g <- TrenaViz:::.geneRegulatoryModelToGraph(targetGene, tss, tbl.model, tbl.reg)
+
+   g.lo <- TrenaViz:::.addGeneModelLayout(g, xPos.span=1500)
+
+   xPos.range <- fivenum(as.numeric(nodeData(g.lo, attr="xPos")))
+   checkEqualsNumeric(max(xPos.range) - min(xPos.range), 1500, tolerance=1)
+   yPos <- as.numeric(nodeData(g.lo, attr="yPos"))
+   checkEquals(min(yPos), -200)  # y location of the targetGene, high on the graph
+   checkTrue(length(grep("^0$", yPos)) >= 6)   # y location of the binding sites
+
+} # test_.addGeneModelLayout
+#------------------------------------------------------------------------------------------------------------------------
+
 # test_multiple.geneRegulatoryModelsToGraph <- function(display=FALSE)
 # {
 #    printf("--- test_multiple.geneRegulatoryModelToGraph")
