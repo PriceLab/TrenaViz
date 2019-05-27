@@ -9,7 +9,7 @@ import cyjShiny
 import TrenaProject
 import graph}
 \usage{
-NetworkView(targetGene, tbl.model, tbl.regulatoryRegions, expressionMatrix,
+NetworkView(targetGene, tss, tbl.model, tbl.regulatoryRegions,
   quiet = TRUE)
 }
 \arguments{

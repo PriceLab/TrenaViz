@@ -4,8 +4,11 @@ library(TrenaViz)
 library(shinyjs)
 library(cyjShiny)
 #------------------------------------------------------------------------------------------------------------------------
-load("gata2.model.RData")
-networkView <- NetworkView("GATA2", tbl.model, tbl.regions, mtx)
+f <- system.file(package="TrenaViz", "extdata", "model.and.regRegions.irf4.top5.RData")
+load(f)
+networkView <- NetworkView("IRF4", 391739, tbl.model, tbl.reg)
+#load("gata2.model.RData")
+#networkView <- NetworkView("GATA2", tbl.model, tbl.regions, mtx)
 #------------------------------------------------------------------------------------------------------------------------
 .createSidebar <- function()
 {
