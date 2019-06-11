@@ -1,0 +1,71 @@
+library(shiny)
+library(shinydashboard)
+library(TrenaViz)
+library(shinyjs)
+#------------------------------------------------------------------------------------------------------------------------
+fimoDatabaseModelBuilder <- FimoDatabaseModelBuilder("hello trenaViz!")
+#------------------------------------------------------------------------------------------------------------------------
+.createSidebar <- function()
+{
+   dashboardSidebar(
+   sidebarMenu(id="sidebarMenu",
+       menuItem("main",                   tabName = "mainTab"),
+       menuItem("Fimo DB Model Builder",  tabName = "fimoDatabaseModelBuilderTab")
+       )
+    )
+
+} # .createSidebar
+#------------------------------------------------------------------------------------------------------------------------
+.createMainTab <- function()
+{
+  tabItem(tabName="mainTab",
+     div(
+        h5("Choose Greeting:"),
+        selectInput("messageSelector", NULL,  c("", "hello world!", "huy sqebeqsed!")),
+        actionButton("viewFimoDatabaseModelBuilderButton", "View FimoDatabaseModelBuilder")
+        )
+     )
+
+} # .createMainTab
+#------------------------------------------------------------------------------------------------------------------------
+.createFimoDatabaseModelBuilderTab <- function()
+{
+   printf("creating fimoDatabaseModelBuilderTab")
+   tabItem(tabName="fimoDatabaseModelBuilderTab",
+           createPage(fimoDatabaseModelBuilder))
+
+   #printf("trying to hide the messageDisplayWidget")
+   #shinyjs::hide("messageDisplayWidget")
+   #printf("after trying to hide the messageDisplayWidget")
+
+} # .createFimoDatabaseModelBuilderTab
+#------------------------------------------------------------------------------------------------------------------------
+.createBody <- function()
+{
+   dashboardBody(
+      includeCSS(system.file(package="TrenaViz", "css", "trenaViz.css")),
+      includeCSS("fimoDatabaseModelBuilder.css"),
+      useShinyjs(),
+      #extendShinyjs(script=system.file(package="TrenaViz", "js", "networkView.js")),
+      tabItems(
+         .createMainTab(),
+         .createFimoDatabaseModelBuilderTab()
+         ))
+
+} # .createBody
+#------------------------------------------------------------------------------------------------------------------------
+ui <- dashboardPage(
+   dashboardHeader(title="Fimo Database Model Builder devel"),
+   .createSidebar(),
+   .createBody()
+   )
+#------------------------------------------------------------------------------------------------------------------------
+server <- function(session, input, output)
+{
+   printf("calling fimoDatabaseModelBuilder::addEventHandlers")
+   addEventHandlers(fimoDatabaseModelBuilder, session, input, output)
+
+} # server
+#------------------------------------------------------------------------------------------------------------------------
+runApp(shinyApp(ui, server))
+
