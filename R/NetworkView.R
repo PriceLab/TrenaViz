@@ -19,32 +19,7 @@
                                 state="environment")
                                 )
 #------------------------------------------------------------------------------------------------------------------------
-#setGeneric("cyjLayout", signature='obj', function(obj) standardGeneric('cyjLayout'))
 setGeneric('getGraph',  signature='obj', function(obj) standardGeneric('getGraph'))
-#------------------------------------------------------------------------------------------------------------------------
-#  provide html layout to the caller
-#
-# @rdname cyjLayout
-# @aliases cyjLayout
-#
-# @param obj An object of class NetworkView
-#
-# @export
-#
-# setMethod('cyjLayout', 'NetworkView',
-#
-#     function(obj){
-#        fluidPage(
-#           fluidRow(
-#              actionButton(inputId="fitNetworkButton", label="FIt"),
-#              actionButton(inputId="fitSelectedNodesButton", label="Fit Selection"),
-#              actionButton(inputId="removeNetworkButton", label="Remove Graph"),
-#              actionButton(inputId="genomicLayoutButton", label="GenomicLayout")
-#              ),
-#           fluidRow(column(width=12, cyjShinyOutput('cyjShiny')))
-#           )
-#        })
-#
 #------------------------------------------------------------------------------------------------------------------------
 setMethod('getGraph', 'NetworkView',
 
