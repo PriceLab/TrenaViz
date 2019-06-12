@@ -60,6 +60,7 @@ setMethod("show", "ModuleExample",
         })
 
 #------------------------------------------------------------------------------------------------------------------------
+setGeneric('.moduleExampleCreatePage',  signature='obj', function(obj) standardGeneric('.moduleExampleCreatePage'))
 #' create and return the control-rich UI
 #'
 #' @rdname createPage
@@ -67,9 +68,9 @@ setMethod("show", "ModuleExample",
 #'
 #' @param obj An object of class ModuleExample
 #'
-#' @export
+#### export
 #'
-setMethod("createPage", "ModuleExample",
+setMethod(".moduleExampleCreatePage", "ModuleExample",
 
       function(obj) {
          fluidPage(id="ModuleExamplePageContent",
@@ -97,7 +98,7 @@ setMethod("displayPage", "ModuleExample",
      function(obj){
          printf("ModuleExample displayPage")
          removeUI(selector="#ModuleExamplePageContent", immediate=TRUE)
-         insertUI(selector="#ModuleExamplePage", where="beforeEnd", createPage(obj), immediate=TRUE)
+         insertUI(selector="#ModuleExamplePage", where="beforeEnd", .moduleExampleCreatePage(obj), immediate=TRUE)
          })
 
 #------------------------------------------------------------------------------------------------------------------------

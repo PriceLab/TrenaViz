@@ -8,7 +8,7 @@
 \alias{createPage}
 \alias{createPage,FimoDatabaseModelBuilder-method}
 \alias{createPage,GeneGeneExpressionPlotter-method}
-\alias{createPage,ModuleExample-method}
+\alias{.moduleExampleCreatePage,ModuleExample-method}
 \alias{createPage,NetworkView-method}
 \title{create and return the control-rich UI}
 \usage{
@@ -18,7 +18,7 @@
 
 \S4method{createPage}{GeneGeneExpressionPlotter}(obj)
 
-\S4method{createPage}{ModuleExample}(obj)
+\S4method{.moduleExampleCreatePage}{ModuleExample}(obj)
 
 \S4method{createPage}{NetworkView}(obj)
 }
