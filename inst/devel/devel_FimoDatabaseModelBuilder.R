@@ -38,11 +38,9 @@ fimoDatabaseModelBuilder <- FimoDatabaseModelBuilder(tp, targetGene, currentGeno
 {
    printf("creating fimoDatabaseModelBuilderTab")
    tabItem(tabName="fimoDatabaseModelBuilderTab",
-           createPage(fimoDatabaseModelBuilder))
-
-   #printf("trying to hide the messageDisplayWidget")
-   #shinyjs::hide("messageDisplayWidget")
-   #printf("after trying to hide the messageDisplayWidget")
+           fluidPage(id="FimoDatabaseModelBuilderPage",
+                     h3(id="fimoDatabaseBuild_title", "Build Gene Regulatory Model Using Fimo Database"),
+                     fluidRow(id="FimoDatabaseModelBuilderPageContent")))
 
 } # .createFimoDatabaseModelBuilderTab
 #------------------------------------------------------------------------------------------------------------------------

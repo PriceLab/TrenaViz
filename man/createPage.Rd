@@ -6,7 +6,7 @@
 \name{createPage,BindingSitesManager-method}
 \alias{createPage,BindingSitesManager-method}
 \alias{createPage}
-\alias{createPage,FimoDatabaseModelBuilder-method}
+\alias{.fimoBuilderCreatePage,FimoDatabaseModelBuilder-method}
 \alias{createPage,GeneGeneExpressionPlotter-method}
 \alias{.moduleExampleCreatePage,ModuleExample-method}
 \alias{createPage,NetworkView-method}
@@ -14,7 +14,7 @@
 \usage{
 \S4method{createPage}{BindingSitesManager}(obj)
 
-\S4method{createPage}{FimoDatabaseModelBuilder}(obj)
+\S4method{.fimoBuilderCreatePage}{FimoDatabaseModelBuilder}(obj)
 
 \S4method{createPage}{GeneGeneExpressionPlotter}(obj)
 

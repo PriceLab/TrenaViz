@@ -38,6 +38,8 @@ FimoDatabaseModelBuilder <- function(trenaProject, targetGene, genomicRegion, tb
 
    state$targetGene <- targetGene
    state$genomicRegion <- genomicRegion
+   state$expressionMatrixName <- ""
+   state$tfbsTrack <- ""
 
    .FimoDatabaseModelBuilder(trenaProject=trenaProject,
                              tbls.regulatoryRegions=tbls.regulatoryRegions,
@@ -54,6 +56,8 @@ setMethod("show", "FimoDatabaseModelBuilder",
         })
 
 #------------------------------------------------------------------------------------------------------------------------
+setGeneric('.fimoBuilderCreatePage',  signature='obj', function(obj) standardGeneric('.fimoBuilderCreatePage'))
+#------------------------------------------------------------------------------------------------------------------------
 #' create and return the control-rich UI
 #'
 #' @rdname createPage
@@ -61,16 +65,14 @@ setMethod("show", "FimoDatabaseModelBuilder",
 #'
 #' @param obj An object of class FimoDatabaseModelBuilder
 #'
-#' @export
 #'
-setMethod("createPage", "FimoDatabaseModelBuilder",
+setMethod(".fimoBuilderCreatePage", "FimoDatabaseModelBuilder",
 
       function(obj) {
          fluidPage(id="FimoDatabaseModelBuilderPageContent",
                    includeCSS(system.file(package="TrenaViz", "css", "fimoDatabaseModelBuilder.css")),
                    fluidRow(
                       column(width=7, offset=1, id="fimoModelBuilderTitleBox",
-                             h4(id="fimoModeBuilder_title", "Build Gene Regulatory Model"),
                              h4(id="fimoModelBuilder_currentTrenaProject", sprintf("%s", getProjectName(obj@trenaProject))),
                              h4(id="fimoModelBuilder_currentTargetene", sprintf("Target GENE: %s", obj@state$targetGene)),
                              h4(id="fimoModelBuilder_currentGenomicRegion",
@@ -78,13 +80,13 @@ setMethod("createPage", "FimoDatabaseModelBuilder",
                              )
                    ),
                    fluidRow(
-                      column(width=6,
+                      column(width=7,
                              selectInput("expressionMatrixSelector", "Expression Matrix",
                                          c("", getExpressionMatrixNames(obj@trenaProject))),
                              selectInput("tfbsTrackSelector", "Restrict TFs to those binding in track: ",
                                          c("", "No restriction: all DNA in current region", names(obj@tbls.regulatoryRegions)))
                              ),
-                      column(width=6,
+                      column(width=5,
                              sliderInput("fimoThresholdSelector", "FIMO motif match cutoff -log10(pVal)", 1, 10, value=4, step=0.1),
                              sliderInput("tfCorrelationThreshold", "TF/targetGene expression min correlation", 0, 1, value=0.4, step=0.1),
                              sliderInput("modelSizeSelector", "Regulatory model max size", 5, 200, value=10, step=1)
@@ -117,15 +119,12 @@ setMethod("createPage", "FimoDatabaseModelBuilder",
 setMethod("displayPage", "FimoDatabaseModelBuilder",
 
      function(obj){
-         printf("=== FimoDatabaseModelBuilder displayPage")
-         removeUI(selector="#FimoDatabaseModelBuilderPageContent", immediate=TRUE)
-         insertUI(selector="#FimoDatabaseModelBuilderPage", where="beforeEnd", createPage(obj), immediate=TRUE)
-         later(function() {shinyjs::disable("buildModelButton")
-                           shinyjs::disable("viewNewModelButton")}, 3)
-         #js$cyjSetupResize();
-         #js$cyjShinySetWidth();
-         #later(function(){fit(session, 300)}, 1000)
-         })
+        printf("=== FimoDatabaseModelBuilder displayPage")
+        removeUI(selector="#FimoDatabaseModelBuilderPageContent", immediate=TRUE)
+        insertUI(selector="#FimoDatabaseModelBuilderPage", where="beforeEnd", .fimoBuilderCreatePage(obj), immediate=TRUE)
+        shinyjs::disable("buildModelButton")
+        shinyjs::disable("viewNewModelButton")
+        })
 
 #------------------------------------------------------------------------------------------------------------------------
 #' add shiny event handlers
@@ -148,26 +147,40 @@ setMethod("addEventHandlers", "FimoDatabaseModelBuilder",
         obj@state$input <- input
         obj@state$output <- output
 
-        observeEvent(input$messageSelector, ignoreInit=TRUE, {
-           print("message selector changed")
-           obj@state$message <- input$messageSelector
+        observeEvent(input$expressionMatrixSelector, ignoreInit=TRUE, {
+           mtx.name <- input$expressionMatrixSelector
+           obj@state$expressionMatrixName <- mtx.name
+           enableBuildButton <- nchar(obj@state$expressionMatrixName) > 0 & nchar(obj@state$tfbsTrack) > 0
+           if(enableBuildButton)
+              shinyjs::enable("buildModelButton")
+           else
+              shinyjs::disable("buildModelButton")
            })
 
-        observeEvent(input$showMessageButton, ignoreInit=TRUE, {
-           shinyjs::show("messageDisplayWidget")
-           print("show message")
-           })
-
-        observeEvent(input$hideMessageButton, ignoreInit=TRUE, {
-           printf("hide message")
-           shinyjs::hide("messageDisplayWidget")
+        observeEvent(input$tfbsTrackSelector, ignoreInit=TRUE, {
+           tfbs.track <- input$tfbsTrackSelector
+           obj@state$tfbsTrack <- tfbs.track
+           enableBuildButton <- nchar(obj@state$expressionMatrixName) > 0 & nchar(obj@state$tfbsTrack) > 0
+           if(enableBuildButton)
+              shinyjs::enable("buildModelButton")
+           else
+              shinyjs::disable("buildModelButton")
            })
 
         observeEvent(input$viewFimoDatabaseModelBuilderButton, ignoreInit=FALSE, {
           printf("view builder ")
           updateTabItems(session, "sidebarMenu", selected="fimoDatabaseModelBuilderTab")
+          displayPage(obj)
           output$messageDisplayWidget <- renderText(obj@state$message)
           })
+
+        observeEvent(input$buildModelButton, ignoreInit=TRUE, {
+           printf("==== build model ")
+           printf("  targetGene: %s", obj@state$targetGene)
+           printf("  genomicRegion: %s", str(obj@state$genomicRegion))
+           printf("  matrix: %s",  obj@state$expressionMatrixName)
+           printf("  track:  %s",  obj@state$tfbsTrack)
+           })
 
      }) # addEventHandlers
 
