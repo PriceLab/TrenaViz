@@ -4,7 +4,8 @@
    margin-top: 5px;
    }
 
-#fimoModelBuilderTitleRow{
+#fimoModelBuilderTitleBox{
+   background-color: lightgray;
    margin: 20px;
    margin-bottom: 50px;
    border: 1px solid red;

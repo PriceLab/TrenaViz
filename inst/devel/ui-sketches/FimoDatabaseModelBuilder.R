@@ -9,7 +9,7 @@ genomicRegionString <- with(tbl.region, sprintf("%s:%d-%d", chrom, start, end))
 ui <- fluidPage(id="FimoDatabaseModelBuilderPageContent",
     includeCSS("../fimoDatabaseModelBuilder.css"),
     fluidRow(
-        column(width=5, offset=1, id="fimoModelBuilderTitleRow",
+        column(width=5, offset=1, id="fimoModelBuilderTitleBox",
           h4(id="fimoModeBuilder_title", "Build Gene Regulation Model"),
           h4(id="fimoModelBuilder_currentTargetene", sprintf("Target gene: %s", "GATA2")),
           h4(id="fimoModelBuilder_currentGenomicRegion", sprintf("In region: %s", genomicRegionString))
