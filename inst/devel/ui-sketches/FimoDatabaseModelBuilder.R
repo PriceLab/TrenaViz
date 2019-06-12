@@ -10,31 +10,30 @@ ui <- fluidPage(id="FimoDatabaseModelBuilderPageContent",
     includeCSS("../fimoDatabaseModelBuilder.css"),
     fluidRow(
         column(width=5, offset=1, id="fimoModelBuilderTitleBox",
-          h4(id="fimoModeBuilder_title", "Build Gene Regulation Model"),
+          h4(id="fimoModeBuilder_title", "Build Gene Regulatory Model"),
+          h4(id="fimoModelBuilder_currentTrenaProject", sprintf("trena project: %s", "Erythropoiesis")),
           h4(id="fimoModelBuilder_currentTargetene", sprintf("Target gene: %s", "GATA2")),
           h4(id="fimoModelBuilder_currentGenomicRegion", sprintf("In region: %s", genomicRegionString))
           )
         ),
     fluidRow(
-       column(width=3,
-          selectInput("trenaProjectSelector", "Project",  c("", "Erythropoiesis", "Lymphocyte")),
-          selectInput("expressionMatrixSelector", "Expression Matrix",  c("", "mtx1", "mtx2-with-very-very-long-name"))),
-        column(width=4,
+       column(width=6,
+          selectInput("expressionMatrixSelector", "Expression Matrix",  c("", "mtx1", "mtx2-with-very-very-long-name")),
           selectInput("tfbsTrackSelector", "Restrict TFs to those binding in track: ",
-                      c("No restriction: all DNA in current region", "ATAC-seq", "GeneHancer")),
-          sliderInput("fimoThresholdSelector", "FIMO motif match cutoff -log10(pVal)", 1, 10, value=4, step=0.1)
-          ),
+                      c("No restriction: all DNA in current region", "ATAC-seq", "GeneHancer"))
+              ),
         column(width=5,
-          sliderInput("modelSizeSelector", "Regulatory model max size", 5, 200, value=10, step=1),
-          sliderInput("tfCorrelationThreshold", "Minimum TF/targetGene correlation", 0, 1, value=0.4, step=0.1)
-               )
+          sliderInput("fimoThresholdSelector", "FIMO motif match cutoff -log10(pVal)", 1, 10, value=4, step=0.1),
+          sliderInput("tfCorrelationThreshold", "TF/targetGene expression min correlation", 0, 1, value=0.4, step=0.1),
+          sliderInput("modelSizeSelector", "Regulatory model max size", 5, 200, value=10, step=1)
+          )
         ),
     fluidRow(
-       column(width=2, offset=4,
+       column(width=2, offset=0,
           actionButton("calculateActionButton", "Build Regulatory Model")
           )),
     fluidRow(
-       column(width=2, offset=4, id="fubar",
+       column(width=2, offset=0, id="fubar",
           actionButton("viewNewModelButton", "View")
           ))
 

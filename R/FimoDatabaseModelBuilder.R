@@ -1,6 +1,7 @@
 # FimoeDatabaseModelBuilder.R
 #------------------------------------------------------------------------------------------------------------------------
-#' import shiny
+#' @import shiny
+#' @import TrenaProject
 #' @name FimoDatabaseModelBuilder
 #' @rdname FimoDatabaseModelBuilder
 #' @aliases FimoDatabaseModelBuilder
@@ -10,11 +11,11 @@
 #------------------------------------------------------------------------------------------------------------------------
 .FimoDatabaseModelBuilder <- setClass("FimoDatabaseModelBuilder",
                              representation = representation(
-                                quiet="logical",
-                                state="environment")
+                                trenaProject="TrenaProject",
+                                tbls.regulatoryRegions="list",
+                                state="environment",
+                                quiet="logical")
                                 )
-#------------------------------------------------------------------------------------------------------------------------
-setGeneric('setMessageX',  signature='obj', function(obj, newValue) standardGeneric('setMessageX'))
 #------------------------------------------------------------------------------------------------------------------------
 #' Create an FimoDatabaseModelBuilder object
 #'
@@ -23,41 +24,33 @@ setGeneric('setMessageX',  signature='obj', function(obj, newValue) standardGene
 #'
 #' @rdname FimoDatabaseModelBuilder
 #'
-#' @param message  A character string, one of the supported species names:  hsapiens, mmuscuulus
+#' @param trenaProjectName character eg, "TrenaProjectErythropoiesis"
+#' @param targetGene character standard geneSymbol name, eg, "GATA2"
+#' @param genomicRegion character, eg "chr3:128,475,725-128,498,247"
 #'
 #' @return An object of the FimoDatabaseModelBuilder class
 #'
 #' @export
 #'
-FimoDatabaseModelBuilder <- function(message, quiet=TRUE)
+FimoDatabaseModelBuilder <- function(trenaProject, targetGene, genomicRegion, tbls.regulatoryRegions, quiet=TRUE)
 {
    state <- new.env(parent=emptyenv())
-   state$message <- message
 
-   .FimoDatabaseModelBuilder(state=state, quiet=quiet)
+   state$targetGene <- targetGene
+   state$genomicRegion <- genomicRegion
+
+   .FimoDatabaseModelBuilder(trenaProject=trenaProject,
+                             tbls.regulatoryRegions=tbls.regulatoryRegions,
+                             state=state,
+                             quiet=quiet)
 
 } # FimoDatabaseModelBuilder
-#------------------------------------------------------------------------------------------------------------------------
-#' assign a new message to be display
-#'
-#' @rdname setMessageX
-#'
-#' @param newValue  A character string
-#'
-#' @export
-#'
-setMethod('setMessageX', 'FimoDatabaseModelBuilder',
-
-     function(obj, newValue){
-          obj@state$message <- newValue
-          })
-
 #------------------------------------------------------------------------------------------------------------------------
 setMethod("show", "FimoDatabaseModelBuilder",
 
     function(object){
         cat(paste("a FimoDatabaseModelBuilder object from the TrenaViz package:", "\n"))
-        cat(sprintf("  message: %s\n", obj@state$message))
+        cat(sprintf("  trena project: %s\n", getProjectName(obj@trenaProject)))
         })
 
 #------------------------------------------------------------------------------------------------------------------------
@@ -74,13 +67,41 @@ setMethod("createPage", "FimoDatabaseModelBuilder",
 
       function(obj) {
          fluidPage(id="FimoDatabaseModelBuilderPageContent",
-          fluidRow(
-             actionButton(inputId="hideMessageButton", label="Hide"),
-             actionButton(inputId="showMessageButton", label="Show")
-             ),
-          fluidRow(column(width=12, htmlOutput("messageDisplayWidget")))
-          )
-       })
+                   includeCSS(system.file(package="TrenaViz", "css", "fimoDatabaseModelBuilder.css")),
+                   fluidRow(
+                      column(width=7, offset=1, id="fimoModelBuilderTitleBox",
+                             h4(id="fimoModeBuilder_title", "Build Gene Regulatory Model"),
+                             h4(id="fimoModelBuilder_currentTrenaProject", sprintf("%s", getProjectName(obj@trenaProject))),
+                             h4(id="fimoModelBuilder_currentTargetene", sprintf("Target GENE: %s", obj@state$targetGene)),
+                             h4(id="fimoModelBuilder_currentGenomicRegion",
+                               with(obj@state$genomicRegion, sprintf("In region: %s:%d-%d", chrom, start, end)))
+                             )
+                   ),
+                   fluidRow(
+                      column(width=6,
+                             selectInput("expressionMatrixSelector", "Expression Matrix",
+                                         c("", getExpressionMatrixNames(obj@trenaProject))),
+                             selectInput("tfbsTrackSelector", "Restrict TFs to those binding in track: ",
+                                         c("", "No restriction: all DNA in current region", names(obj@tbls.regulatoryRegions)))
+                             ),
+                      column(width=6,
+                             sliderInput("fimoThresholdSelector", "FIMO motif match cutoff -log10(pVal)", 1, 10, value=4, step=0.1),
+                             sliderInput("tfCorrelationThreshold", "TF/targetGene expression min correlation", 0, 1, value=0.4, step=0.1),
+                             sliderInput("modelSizeSelector", "Regulatory model max size", 5, 200, value=10, step=1)
+                             )
+                      ), # fluidRow
+                   fluidRow(
+                      column(width=2, offset=0,
+                             actionButton("buildModelButton", "Build Regulatory Model")
+                             )),
+                   fluidRow(
+                      column(width=2, offset=0, id="fubar",
+                             actionButton("viewNewModelButton", "View")
+                             ))
+
+                   ) # fluidPage
+
+      }) # createPage
 
 #------------------------------------------------------------------------------------------------------------------------
 #' display the page
@@ -96,12 +117,14 @@ setMethod("createPage", "FimoDatabaseModelBuilder",
 setMethod("displayPage", "FimoDatabaseModelBuilder",
 
      function(obj){
-         printf("FimoDatabaseModelBuilder displayPage")
+         printf("=== FimoDatabaseModelBuilder displayPage")
          removeUI(selector="#FimoDatabaseModelBuilderPageContent", immediate=TRUE)
          insertUI(selector="#FimoDatabaseModelBuilderPage", where="beforeEnd", createPage(obj), immediate=TRUE)
+         later(function() {shinyjs::disable("buildModelButton")
+                           shinyjs::disable("viewNewModelButton")}, 3)
          #js$cyjSetupResize();
-         js$cyjShinySetWidth();
-         later(function(){fit(session, 300)}, 1000)
+         #js$cyjShinySetWidth();
+         #later(function(){fit(session, 300)}, 1000)
          })
 
 #------------------------------------------------------------------------------------------------------------------------

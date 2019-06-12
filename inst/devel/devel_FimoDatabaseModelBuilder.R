@@ -2,8 +2,14 @@ library(shiny)
 library(shinydashboard)
 library(TrenaViz)
 library(shinyjs)
+library(TrenaProjectErythropoiesis)
+tp <- TrenaProjectErythropoiesis()
+
 #------------------------------------------------------------------------------------------------------------------------
-fimoDatabaseModelBuilder <- FimoDatabaseModelBuilder("hello trenaViz!")
+currentGenomicRegion <- list(chrom="chr3", start=128474310, end=128505841)  # the two main enhancer/promotres, total of 31kb
+tbls.regulatoryRegions <- get(load("tbls.regulatoryRegions.RData"))
+targetGene <- "GATA2"
+fimoDatabaseModelBuilder <- FimoDatabaseModelBuilder(tp, targetGene, currentGenomicRegion, tbls.regulatoryRegions)
 #------------------------------------------------------------------------------------------------------------------------
 .createSidebar <- function()
 {

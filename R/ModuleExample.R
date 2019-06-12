@@ -98,9 +98,6 @@ setMethod("displayPage", "ModuleExample",
          printf("ModuleExample displayPage")
          removeUI(selector="#ModuleExamplePageContent", immediate=TRUE)
          insertUI(selector="#ModuleExamplePage", where="beforeEnd", createPage(obj), immediate=TRUE)
-         #js$cyjSetupResize();
-         js$cyjShinySetWidth();
-         later(function(){fit(session, 300)}, 1000)
          })
 
 #------------------------------------------------------------------------------------------------------------------------
@@ -142,6 +139,7 @@ setMethod("addEventHandlers", "ModuleExample",
         observeEvent(input$viewModuleExampleButton, ignoreInit=FALSE, {
           printf("view module example")
           updateTabItems(session, "sidebarMenu", selected="moduleExampleTab")
+          displayPage(obj)
           output$messageDisplayWidget <- renderText(obj@state$message)
           })
 

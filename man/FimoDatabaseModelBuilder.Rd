@@ -4,12 +4,17 @@
 \name{FimoDatabaseModelBuilder}
 \alias{FimoDatabaseModelBuilder}
 \alias{.FimoDatabaseModelBuilder}
-\title{import shiny}
+\title{Create an FimoDatabaseModelBuilder object}
 \usage{
-FimoDatabaseModelBuilder(message, quiet = TRUE)
+FimoDatabaseModelBuilder(trenaProject, targetGene, genomicRegion,
+  tbls.regulatoryRegions, quiet = TRUE)
 }
 \arguments{
-\item{message}{A character string, one of the supported species names:  hsapiens, mmuscuulus}
+\item{targetGene}{character standard geneSymbol name, eg, "GATA2"}
+
+\item{genomicRegion}{character, eg "chr3:128,475,725-128,498,247"}
+
+\item{trenaProjectName}{character eg, "TrenaProjectErythropoiesis"}
 }
 \value{
 An object of the FimoDatabaseModelBuilder class

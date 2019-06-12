@@ -1,4 +1,4 @@
-#' imprt TrenaProject
+#' import TrenaProject
 #' import shiny
 #' import shinydashboard
 #' import shinyjs

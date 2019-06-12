@@ -32,7 +32,9 @@ moduleExample <- ModuleExample("hello trenaViz!")
 {
    printf("creating moduleExampleTab")
    tabItem(tabName="moduleExampleTab",
-           createPage(moduleExample))
+           fluidPage(id="ModuleExamplePage",
+                     h3(id="moduleExample_title", "Module Example"),
+                     fluidRow(id="ModuleExamplePageContent")))
 
    #printf("trying to hide the messageDisplayWidget")
    #shinyjs::hide("messageDisplayWidget")
