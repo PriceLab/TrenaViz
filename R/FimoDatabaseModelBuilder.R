@@ -40,6 +40,9 @@ FimoDatabaseModelBuilder <- function(trenaProject, targetGene, genomicRegion, tb
    state$genomicRegion <- genomicRegion
    state$expressionMatrixName <- ""
    state$tfbsTrack <- ""
+   state$fimoThreshold <- 4.0
+   state$tfCorrelationThreshold <- 0.4
+   state$modelSize <- 10
 
    .FimoDatabaseModelBuilder(trenaProject=trenaProject,
                              tbls.regulatoryRegions=tbls.regulatoryRegions,
@@ -88,7 +91,7 @@ setMethod(".fimoBuilderCreatePage", "FimoDatabaseModelBuilder",
                              ),
                       column(width=5,
                              sliderInput("fimoThresholdSelector", "FIMO motif match cutoff -log10(pVal)", 1, 10, value=4, step=0.1),
-                             sliderInput("tfCorrelationThreshold", "TF/targetGene expression min correlation", 0, 1, value=0.4, step=0.1),
+                             sliderInput("tfCorrelationThresholdSelector", "TF/targetGene expression min correlation", 0, 1, value=0.4, step=0.1),
                              sliderInput("modelSizeSelector", "Regulatory model max size", 5, 200, value=10, step=1)
                              )
                       ), # fluidRow
@@ -96,11 +99,12 @@ setMethod(".fimoBuilderCreatePage", "FimoDatabaseModelBuilder",
                       column(width=2, offset=0,
                              actionButton("buildModelButton", "Build Regulatory Model")
                              )),
-                   fluidRow(
-                      column(width=2, offset=0, id="fubar",
-                             actionButton("viewNewModelButton", "View")
-                             ))
-
+                   #fluidRow(
+                   #   column(width=2, offset=0, id="fubar",
+                   #          actionButton("viewNewModelButton", "View")
+                   #          ))
+                   br(),br(),
+                   wellPanel(style="overflow-y:scroll; height:200px", pre(id = "console"))
                    ) # fluidPage
 
       }) # createPage
@@ -123,7 +127,7 @@ setMethod("displayPage", "FimoDatabaseModelBuilder",
         removeUI(selector="#FimoDatabaseModelBuilderPageContent", immediate=TRUE)
         insertUI(selector="#FimoDatabaseModelBuilderPage", where="beforeEnd", .fimoBuilderCreatePage(obj), immediate=TRUE)
         shinyjs::disable("buildModelButton")
-        shinyjs::disable("viewNewModelButton")
+        #shinyjs::disable("viewNewModelButton")
         })
 
 #------------------------------------------------------------------------------------------------------------------------
@@ -174,12 +178,30 @@ setMethod("addEventHandlers", "FimoDatabaseModelBuilder",
           output$messageDisplayWidget <- renderText(obj@state$message)
           })
 
+        observeEvent(input$fimoThresholdSelector, ignoreInit=FALSE, {
+          printf("fimo threshold: %f", input$fimoThresholdSelector)
+          obj@state$fimoThreshold <- input$fimoThresholdSelector
+          })
+
+        observeEvent(input$tfCorrelationThresholdSelector, ignoreInit=FALSE, {
+          printf("tf correlation threshold: %f", input$tfCorrelationThresholdSelector)
+          obj@state$tfCorrelationThreshold <- input$tfCorrelationThresholdSelector
+          })
+
+        observeEvent(input$modelSizeSelector, ignoreInit=FALSE, {
+          printf("model size: %d", input$modelSizeSelector)
+          obj@state$modelSize <- input$modelSizeSelector
+          })
+
         observeEvent(input$buildModelButton, ignoreInit=TRUE, {
            printf("==== build model ")
            printf("  targetGene: %s", obj@state$targetGene)
            printf("  genomicRegion: %s", str(obj@state$genomicRegion))
            printf("  matrix: %s",  obj@state$expressionMatrixName)
            printf("  track:  %s",  obj@state$tfbsTrack)
+           printf("  fimoThreshold: %f",  obj@state$fimoThreshold)
+           printf("  tf correlation threshold: %f", obj@state$tfCorrelationThreshold)
+           printf("  model size: %d",  obj@state$modelSize <- 10)
            })
 
      }) # addEventHandlers
