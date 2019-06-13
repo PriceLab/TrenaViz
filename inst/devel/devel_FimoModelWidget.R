@@ -7,9 +7,10 @@ tp <- TrenaProjectErythropoiesis()
 
 #------------------------------------------------------------------------------------------------------------------------
 currentGenomicRegion <- list(chrom="chr3", start=128474310, end=128505841)  # the two main enhancer/promotres, total of 31kb
+currentGenomicRegion <- list(chrom="chr3", start=128480068, end=128500226)
 tbls.regulatoryRegions <- get(load("tbls.regulatoryRegions.RData"))
 targetGene <- "GATA2"
-fimoDatabaseModelBuilder <- FimoDatabaseModelBuilder(tp, targetGene, currentGenomicRegion, tbls.regulatoryRegions)
+fimoDbModelBuilder <- FimoModelWidget(tp, targetGene, currentGenomicRegion, tbls.regulatoryRegions)
 #------------------------------------------------------------------------------------------------------------------------
 .createSidebar <- function()
 {
@@ -28,7 +29,7 @@ fimoDatabaseModelBuilder <- FimoDatabaseModelBuilder(tp, targetGene, currentGeno
      div(
         h5("Choose Greeting:"),
         selectInput("messageSelector", NULL,  c("", "hello world!", "huy sqebeqsed!")),
-        actionButton("viewFimoDatabaseModelBuilderButton", "View FimoDatabaseModelBuilder")
+        actionButton("viewFimoModelWidgetButton", "View Fimo Model Widget")
         )
      )
 
@@ -38,7 +39,7 @@ fimoDatabaseModelBuilder <- FimoDatabaseModelBuilder(tp, targetGene, currentGeno
 {
    printf("creating fimoDatabaseModelBuilderTab")
    tabItem(tabName="fimoDatabaseModelBuilderTab",
-           fluidPage(id="FimoDatabaseModelBuilderPage",
+           fluidPage(id="FimoModelWidgetPage",
                      h3(id="fimoDatabaseBuild_title", "Build Gene Regulatory Model Using Fimo Database"),
                      fluidRow(id="FimoDatabaseModelBuilderPageContent")))
 
@@ -67,7 +68,7 @@ ui <- dashboardPage(
 server <- function(session, input, output)
 {
    printf("calling fimoDatabaseModelBuilder::addEventHandlers")
-   addEventHandlers(fimoDatabaseModelBuilder, session, input, output)
+   addEventHandlers(fimoDbModelBuilder, session, input, output)
 
 } # server
 #------------------------------------------------------------------------------------------------------------------------

@@ -23,6 +23,7 @@ bsm <- BindingSitesManager()
 genomicRegionString <- "" #with(tbl.regions, sprintf("%s:%d-%d", chrom, start, end))
 #------------------------------------------------------------------------------------------------------------------------
 state <- new.env(parent=emptyenv())
+state$trenaVizRunning <- FALSE
 state$models <- list()
 state$tbl.chipSeq <- NULL
 model.count <- 0   # for creating default model names
@@ -59,6 +60,7 @@ setGeneric('createApp',     signature='obj', function(obj, port=NA_integer_) sta
 #'
 TrenaViz <- function(projectName, quiet=TRUE)
 {
+   state$trenaVizRunning <- TRUE
    require(projectName, character.only=TRUE)
    initialization.command <- sprintf("trenaProject <- %s()", projectName)
    eval(parse(text=initialization.command))
