@@ -48,6 +48,8 @@ FimoModelWidget <- function(quiet=TRUE)
    state$tfCorrelationThreshold <- 0.4
    state$modelSize <- 10
 
+   state$eventHandlersInstalled <- FALSE
+
    .FimoModelWidget(state=state, quiet=quiet)
 
 } # FimoModelWidget
@@ -107,8 +109,11 @@ setMethod("setTargetGene", "FimoModelWidget",
 setMethod("setGenomicRegion", "FimoModelWidget",
 
     function(obj, tbl.region){
-        obj@state$genomicRegion <- tbl.region
-        })
+       printf("--- FimoModelWidget::setGenomicRegion")
+       print(tbl.region)
+       with(tbl.region, printf("size: %5.1f", (end-start)/1000))
+       obj@state$genomicRegion <- tbl.region
+       })
 
 #------------------------------------------------------------------------------------------------------------------------
 #' areas of (currently) open chromatin
@@ -148,8 +153,8 @@ setMethod(".fimoBuilderCreatePage", "FimoModelWidget",
                              h4(id="fimoModelBuilder_currentTrenaProject", sprintf("%s", getProjectName(obj@state$trenaProject))),
                              h4(id="fimoModelBuilder_currentTargetene", sprintf("Target GENE: %s", obj@state$targetGene)),
                              h4(id="fimoModelBuilder_currentGenomicRegion",
-                               with(obj@state$genomicRegion, sprintf("In region: %s:%d-%d", chrom, start, end)))
-                             )
+                                with(obj@state$genomicRegion, sprintf("In region: %s:%d-%d (%5.1f kb)",
+                                                                      chrom, start, end, (end-start)/1000))))
                    ),
                    fluidRow(
                       column(width=7,
@@ -196,7 +201,6 @@ setMethod("displayPage", "FimoModelWidget",
         removeUI(selector="#FimoModelWidgetPageContent", immediate=TRUE)
         insertUI(selector="#FimoModelWidgetPage", where="beforeEnd", .fimoBuilderCreatePage(obj), immediate=TRUE)
         shinyjs::disable("buildFimoModelButton")
-        #shinyjs::disable("viewNewModelButton")
         })
 
 #------------------------------------------------------------------------------------------------------------------------
@@ -219,6 +223,11 @@ setMethod("addEventHandlers", "FimoModelWidget",
         obj@state$session <- session
         obj@state$input <- input
         obj@state$output <- output
+
+        printf("Fimo addEventHandlers, installed already? %s", obj@state$eventHandlersInstalled)
+
+        if(obj@state$eventHandlersInstalled)
+           return()
 
         observeEvent(input$expressionMatrixSelector, ignoreInit=TRUE, {
            mtx.name <- input$expressionMatrixSelector
@@ -248,17 +257,17 @@ setMethod("addEventHandlers", "FimoModelWidget",
           })
 
         observeEvent(input$fimoThresholdSelector, ignoreInit=FALSE, {
-          printf("fimo threshold: %f", input$fimoThresholdSelector)
+          #printf("fimo threshold: %f", input$fimoThresholdSelector)
           obj@state$fimoThreshold <- input$fimoThresholdSelector
           })
 
         observeEvent(input$tfCorrelationThresholdSelector, ignoreInit=FALSE, {
-          printf("tf correlation threshold: %f", input$tfCorrelationThresholdSelector)
+          #printf("tf correlation threshold: %f", input$tfCorrelationThresholdSelector)
           obj@state$tfCorrelationThreshold <- input$tfCorrelationThresholdSelector
           })
 
         observeEvent(input$modelSizeSelector, ignoreInit=FALSE, {
-          printf("model size: %d", input$modelSizeSelector)
+          #printf("model size: %d", input$modelSizeSelector)
           obj@state$modelSize <- input$modelSizeSelector
           })
 
@@ -305,38 +314,40 @@ setMethod("addEventHandlers", "FimoModelWidget",
            builder <- trenaSGM::FimoDatabaseModelBuilder(getGenome(obj@state$trenaProject),
                                                          obj@state$targetGene,
                                                          recipe)
+           tryCatch({
+                       withCallingHandlers({
+                                              message(sprintf("starting build"))
+                                              message(sprintf("saving recipe to %s", "recipe.RData"))
+                                              save(recipe, file="recipe.RData")
+                                              x <- build(builder)
+                                              model.name <- sprintf("model.%04d", as.integer(1000 * runif(1)))
+                                              state$models[[model.name]] <- x
 
-
-      tryCatch({
-          withCallingHandlers({
-             message(sprintf("starting build"))
-             x <- build(builder)
-             model.name <- sprintf("model.%04d", as.integer(1000 * runif(1)))
-             state$models[[model.name]] <- x
-
-             message(sprintf("build complete"))
-             message(sprintf("model has %d tfs", nrow(x$model)))
-             message(print(head(x$model)))
-             if(exists("state")){
-                if(state$trenaVizRunning){
-                   model.count <- length(state$models)
-                   new.model.name <- names(state$models)[model.count]
-                   new.table <- state$models[[model.count]]$model
-                   displayModel(session, input, output, new.table, new.model.name)
-                   updateTabItems(session, "sidebarMenu", select="igvAndTable")
-                   }
-                }
-             },
-           message=function(m){
-              shinyjs::html(id="fimoBuildConsole", html=m$message, add=TRUE)
-              })
-           }, error=function(e){
-               msg <- e$message
-               print(msg)
-               showModal(modalDialog(title="trena model building error", msg))
-               }) # tryCatch
+                                              message(sprintf("build complete"))
+                                              message(sprintf("model has %d tfs", nrow(x$model)))
+                                              message(print(head(x$model)))
+                                              if(exists("state")){
+                                                 if(state$trenaVizRunning){
+                                                    model.count <- length(state$models)
+                                                    new.model.name <- names(state$models)[model.count]
+                                                    new.table <- state$models[[model.count]]$model
+                                                    displayModel(session, input, output, new.table, new.model.name)
+                                                    updateTabItems(session, "sidebarMenu", select="igvAndTable")
+                                                 }
+                                              }
+                                           },
+                                           message=function(m){
+                                              shinyjs::html(id="fimoBuildConsole", html=m$message, add=TRUE)
+                                           })
+                    }, error=function(e){
+                       msg <- e$message
+                       print(msg)
+                       showModal(modalDialog(title="trena model building error", msg))
+                    }) # tryCatch
 
            }) # obseve buildFimoModelButton
+
+        obj@state$eventHandlersInstalled <- TRUE
 
      }) # addEventHandlers
 

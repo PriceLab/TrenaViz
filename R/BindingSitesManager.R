@@ -110,7 +110,7 @@ setMethod("setTF", "BindingSitesManager",
 #' @aliases setGenomicRegion
 #'
 #' @param obj An object of class BindingSitesManager
-#' @param TF character string, the transcription factor we are currently concerned with
+#' @param tbl.region a data.frame containing a single (?) genonmic region
 #'
 #' @export
 #'

@@ -18,6 +18,7 @@ setupIgvAndTableToggling <- function(session, input)
           tbl.region <- with(loc, data.frame(chrom=chrom, start=start, end=end, stringsAsFactors=FALSE))
           #printf("--- calling sgr(bsm) from tvHelpers setupIgvAndTableToggling")
           setGenomicRegion(bsm, tbl.region)
+          setGenomicRegion(fimoBuilder, tbl.region)
           }
        })
 
@@ -530,48 +531,27 @@ dispatch.rowClickInModelTable <- function(trenaProject, session, input, output, 
    full.roi <- state$chromLocRegion
    chrom.loc <- trena::parseChromLocString(full.roi)
 
-   if(action.name == "Footprints"){
-      tbl.fp <- state$models[[current.model.name]]$regulatoryRegions
-      tbl.fp.tf <- subset(tbl.fp, geneSymbol==tf.name)
-      dups <- which(duplicated(tbl.fp.tf$loc))
-      if(length(dups) > 0)
-         tbl.fp.tf <- tbl.fp.tf[-dups,]
-      tbl.tmp <- tbl.fp.tf[ c("chrom", "fp_start", "fp_end", "shortMotif")]
-      colnames(tbl.tmp) <- c("chrom", "start", "end", "name")
+      #     "Motif matched regulatory regions",
+      #     "Calculate Binding Sites",
+      #     "ChIP-seq hits"))
+
+
+   if(action.name == "Motif-matched regulatory regions"){
+      tbl.motifs <- state$models[[current.model.name]]$regulatoryRegions
+      tbl.motifs.std <- standardizeMotifMatchedTable(tbl.motifs)
+      tbl.trimmed <-  subset(tbl.motifs.std, tf==tf.name)
       state$colorNumber <- (state$colorNumber %% totalColorCount) + 1
       next.color <- colors[state$colorNumber]
-      loadBedTrack(session, sprintf("FP-%s", tf.name), tbl.tmp, color=next.color, trackHeight=25)
+      loadBedTrack(session, sprintf("motif-%s", tf.name), tbl.trimmed, color=next.color, trackHeight=25)
       } # if footprints
 
-   if(action.name == "Binding Sites"){
+   if(action.name == "Calculate Binding Sites"){
       displayPage(bsm, tf.name)
-      # dialog <- bindingSitesOptionsDialog(tf.name)
-      # showModal(dialog)
-      # motifNames.tfClass <- geneToMotif(MotifDb, tf.name, source="TFClass")$motif
-      # pwms.tfClass <- query(MotifDb, "", motifNames.tfClass)
-      # motifNames.motifDb <- geneToMotif(MotifDb, tf.name, source="MotifDb")
-      # full.motif.names <- rownames(geneToMotif(MotifDb, tf.name, source="MotifDb"))
-      # pwms.motifDb <- MotifDb[full.motif.names]
-      # pwm.name.oi <- c(names(pwms.tfClass), names(pwms.motifDb))[1]
-      # pwm.oi <- MotifDb[pwm.name.oi]
-      # tbl.regions <- with(chrom.loc, data.frame(chrom=chrom, start=start, end=end, stringsAsFactors=FALSE))
-      # mm <- MotifMatcher("hg38", as.list(pwm.oi), quiet=TRUE)
-      # matchThreshold <- 80
-      # tbl.matches <- findMatchesByChromosomalRegion(mm, tbl.regions, pwmMatchMinimumAsPercentage=matchThreshold)
-      # if(nrow(tbl.matches) > 0){
-      #    tbl.tmp <- tbl.matches[, c("chrom", "motifStart", "motifEnd", "motifRelativeScore")]
-      #    colnames(tbl.tmp) <- c("chrom", "start", "end", "value")
-      #    state$colorNumber <- (state$colorNumber %% totalColorCount) + 1
-      #    next.color <- colors[state$colorNumber]
-      #    scale.bottom <- 0.9 * (matchThreshold/100)
-      #    loadBedGraphTrack(session, tf.name, tbl.tmp, color=next.color, trackHeight=25, autoscale=FALSE,
-      #                      min=scale.bottom, max=1.0)
-      #    }
       } # if footprints
 
    if(action.name == "ChIP-seq hits"){
       if(is.null(state$tbl.chipSeq)){
-         showNotification("retrieving ChIP-seq data from database...", duration=100, closeButton=TRUE)
+         showNotification("retrieving ChIP-seq data from database...", duration=10, closeButton=TRUE)
          tbl.chipSeq <- with(chrom.loc, getChipSeq(trenaProject, chrom, start, end,  tf.names))
          #save(tbl.chipSeq, file="tbl.chipSeq.RData")
          state$tbl.chipSeq <- tbl.chipSeq

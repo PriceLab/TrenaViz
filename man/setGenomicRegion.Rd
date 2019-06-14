@@ -14,11 +14,11 @@
 \arguments{
 \item{obj}{An object of class BindingSitesManager}
 
-\item{tbl.region}{a data.frame of 1 row: chrom, start and end columns}
-
-\item{TF}{character string, the transcription factor we are currently concerned with}
+\item{tbl.region}{a data.frame containing a single (?) genonmic region}
 
 \item{obj}{An object of class FimoModelWidget}
+
+\item{tbl.region}{a data.frame of 1 row: chrom, start and end columns}
 }
 \description{
 specify the one or more genomic regions in which to look for binding sites

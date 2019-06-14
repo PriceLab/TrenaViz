@@ -229,7 +229,6 @@ setMethod('createServer', 'TrenaViz',
       chromLocString <- region.list$chromLocString
       tbl.region <- with(region.list, data.frame(chrom=chrom, start=start, end=end, stringsAsFactors=FALSE))
       printf("renderIgvShiny, chrom loc?  %s", chromLocString)
-      browser()
       printf("--- calling sgr(bsm) from renderIgvShiny")
       setGenomicRegion(bsm, tbl.region)
       options <- list(genomeName=getGenome(obj@project),
@@ -289,8 +288,8 @@ setMethod('createServer', 'TrenaViz',
                       #wellPanel(
                         h4("TF selection will display:"),
                       selectInput("selectRowAction", NULL,  c("(no action)",
-                                                              "Footprints",
-                                                              "Binding Sites",
+                                                              "Motif-matched regulatory regions",
+                                                              "Calculate Binding Sites",
                                                               "ChIP-seq hits"))
                       ) # column
                ) # fluidRow
