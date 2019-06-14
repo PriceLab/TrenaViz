@@ -20,6 +20,7 @@
 #------------------------------------------------------------------------------------------------------------------------
 tbl.region <- data.frame(chrom="chr19", start=1036002, end=1142642, stringsAsFactors=FALSE)
 bsm <- BindingSitesManager()
+fimoBuilder <- FimoModelWidget()
 genomicRegionString <- "" #with(tbl.regions, sprintf("%s:%d-%d", chrom, start, end))
 #------------------------------------------------------------------------------------------------------------------------
 state <- new.env(parent=emptyenv())
@@ -277,8 +278,8 @@ setMethod('createServer', 'TrenaViz',
                ) # fluidRow
             ), # tabItem 1
          .createBuildModelTab(project),
+         .createFimoDatabaseModelBuilderTab(),
          .createVideoTab(),
-         #.createMotifTab(),
          .createBindingSitesManagerTab()
          ) # tabItems
 
@@ -292,10 +293,9 @@ setMethod('createServer', 'TrenaViz',
     sidebarMenu(id="sidebarMenu",
        menuItem("IGV and Current Models", tabName = "igvAndTable"),
        menuItem("Build Footprint Model",  tabName = "buildFootprintModels"),
+       menuItem("Build ATAC-seq Model",   tabName = "fimoDatabaseModelBuilderTab"),
        menuItem("Introductory video",     tabName = "video"),
-       #menuItem("Motifs",                 tabName = "motifTab"),
-       menuItem("Binding Sites Mangager", tabName = "bindingSitesManagerTab")
-
+       menuItem("Binding Sites Manager",  tabName = "bindingSitesManagerTab")
       ),
      #h5("Choose TF:"),
      #selectInput("tfSelector", NULL,  c("", "HES7", "LYL1", "IRF5", "SPI1", "CEBPA", "ELK3", "RUNX1")),
@@ -425,6 +425,16 @@ setMethod('createServer', 'TrenaViz',
                      fluidRow(id="bindingSitesManagerPageContent")))
 
 } # .createExperimentalTab
+#------------------------------------------------------------------------------------------------------------------------
+.createFimoDatabaseModelBuilderTab <- function()
+{
+   printf("creating fimoDatabaseModelBuilderTab")
+   tabItem(tabName="fimoDatabaseModelBuilderTab",
+           fluidPage(id="FimoModelWidgetPage",
+                     h3(id="fimoDatabaseBuild_title", "Build Gene Regulatory Model Using Fimo Database"),
+                     fluidRow(id="FimoDatabaseModelBuilderPageContent")))
+
+} # .createFimoDatabaseModelBuilderTab
 #------------------------------------------------------------------------------------------------------------------------
 #' Create a runnable shiny app
 #'
