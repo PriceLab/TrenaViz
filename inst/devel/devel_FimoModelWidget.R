@@ -10,7 +10,13 @@ currentGenomicRegion <- list(chrom="chr3", start=128474310, end=128505841)  # th
 currentGenomicRegion <- list(chrom="chr3", start=128480068, end=128500226)
 tbls.regulatoryRegions <- get(load("tbls.regulatoryRegions.RData"))
 targetGene <- "GATA2"
-fimoDbModelBuilder <- FimoModelWidget(tp, targetGene, currentGenomicRegion, tbls.regulatoryRegions)
+#fimoDbModelBuilder <- FimoModelWidget(tp, targetGene, currentGenomicRegion, tbls.regulatoryRegions)
+fimoDbModelBuilder <- FimoModelWidget()
+setTrenaProject(fimoDbModelBuilder, tp)
+setTargetGene(fimoDbModelBuilder, targetGene)
+setGenomicRegion(fimoDbModelBuilder, currentGenomicRegion)
+setRegulatoryRegions(fimoDbModelBuilder, tbls.regulatoryRegions)
+#fimoDbModelBuilder <- FimoModelWidget(tp, targetGene, currentGenomicRegion, tbls.regulatoryRegions)
 #------------------------------------------------------------------------------------------------------------------------
 .createSidebar <- function()
 {

@@ -11,11 +11,12 @@
 #------------------------------------------------------------------------------------------------------------------------
 .FimoModelWidget <- setClass("FimoModelWidget",
                              representation = representation(
-                                trenaProject="TrenaProject",
-                                tbls.regulatoryRegions="list",
                                 state="environment",
                                 quiet="logical")
                                 )
+#------------------------------------------------------------------------------------------------------------------------
+setGeneric('setTrenaProject',  signature='obj', function(obj, trenaProject) standardGeneric('setTrenaProject'))
+setGeneric('setRegulatoryRegions', signature='obj', function(obj, tbls.regulatoryRegions) standardGeneric('setRegulatoryRegions'))
 #------------------------------------------------------------------------------------------------------------------------
 #' Create an FimoModelWidget object
 #'
@@ -24,30 +25,30 @@
 #'
 #' @rdname FimoModelWidget
 #'
-#' @param trenaProjectName character eg, "TrenaProjectErythropoiesis"
-#' @param targetGene character standard geneSymbol name, eg, "GATA2"
+
 #' @param genomicRegion character, eg "chr3:128,475,725-128,498,247"
 #'
 #' @return An object of the FimoModelWidget class
 #'
 #' @export
 #'
-FimoModelWidget <- function(trenaProject, targetGene, genomicRegion, tbls.regulatoryRegions, quiet=TRUE)
+#FimoModelWidget <- function(trenaProject, targetGene, genomicRegion, tbls.regulatoryRegions, quiet=TRUE)
+FimoModelWidget <- function(quiet=TRUE)
 {
    state <- new.env(parent=emptyenv())
 
-   state$targetGene <- targetGene
-   state$genomicRegion <- genomicRegion
+   state$trenaProject <- NULL
+   state$targetGene <- NULL
+   state$genomicRegion <- NULL
+   state$tbls.regulatoryRegions <- NULL
+
    state$expressionMatrixName <- ""
    state$tfbsTrack <- ""
    state$fimoThreshold <- 4.0
    state$tfCorrelationThreshold <- 0.4
    state$modelSize <- 10
 
-   .FimoModelWidget(trenaProject=trenaProject,
-                             tbls.regulatoryRegions=tbls.regulatoryRegions,
-                             state=state,
-                             quiet=quiet)
+   .FimoModelWidget(state=state, quiet=quiet)
 
 } # FimoModelWidget
 #------------------------------------------------------------------------------------------------------------------------
@@ -55,7 +56,75 @@ setMethod("show", "FimoModelWidget",
 
     function(object){
         cat(paste("a FimoModelWidget object from the TrenaViz package:", "\n"))
-        cat(sprintf("  trena project: %s\n", getProjectName(obj@trenaProject)))
+        cat(sprintf("  trena project: %s\n", getProjectName(obj@state$trenaProject)))
+        })
+
+#------------------------------------------------------------------------------------------------------------------------
+#' supply tissue-specific data
+#'
+#' @rdname setTrenaProject
+#' @aliases setTrenaProject
+#'
+#' @param obj An object of class FimoModelWidget
+#' @param trenaProject an instance of a concrete subclass of TrenaProject
+#'
+#' @export
+
+setMethod("setTrenaProject", "FimoModelWidget",
+
+    function(obj, trenaProject){
+        obj@state$trenaProject <- trenaProject
+        })
+
+#------------------------------------------------------------------------------------------------------------------------
+#' supply the name of the regulated gene
+#'
+#' @rdname setTargetGene
+#' @aliases setTargetGene
+#'
+#' @param obj An object of class FimoModelWidget
+#' @param targetGene character, a geneSymbol
+#'
+#' @export
+
+setMethod("setTargetGene", "FimoModelWidget",
+
+    function(obj, targetGene){
+        obj@state$targetGene <- targetGene
+        })
+
+#------------------------------------------------------------------------------------------------------------------------
+#' specify the chromosomal location of interest
+#'
+#' @rdname setGenomicRegion
+#' @aliases setGenomicRegion
+#'
+#' @param obj An object of class FimoModelWidget
+#' @param tbl.region a data.frame of 1 row: chrom, start and end columns
+#'
+#' @export
+
+setMethod("setGenomicRegion", "FimoModelWidget",
+
+    function(obj, tbl.region){
+        obj@state$genomicRegion <- tbl.region
+        })
+
+#------------------------------------------------------------------------------------------------------------------------
+#' areas of (currently) open chromatin
+#'
+#' @rdname setRegulatoryRegion
+#' @aliases setRegulatoryRegions
+#'
+#' @param obj An object of class FimoModelWidget
+#' @param tbsl.regulatoryRegions a list of data.frames, each with chrom, start and end columns
+#'
+#' @export
+
+setMethod("setRegulatoryRegions", "FimoModelWidget",
+
+    function(obj, tbls.regulatoryRegions){
+        obj@state$tbls.regulatoryRegions <- tbls.regulatoryRegions
         })
 
 #------------------------------------------------------------------------------------------------------------------------
@@ -76,7 +145,7 @@ setMethod(".fimoBuilderCreatePage", "FimoModelWidget",
                    includeCSS(system.file(package="TrenaViz", "css", "fimoDatabaseModelBuilder.css")),
                    fluidRow(
                       column(width=7, offset=1, id="fimoModelBuilderTitleBox",
-                             h4(id="fimoModelBuilder_currentTrenaProject", sprintf("%s", getProjectName(obj@trenaProject))),
+                             h4(id="fimoModelBuilder_currentTrenaProject", sprintf("%s", getProjectName(obj@state$trenaProject))),
                              h4(id="fimoModelBuilder_currentTargetene", sprintf("Target GENE: %s", obj@state$targetGene)),
                              h4(id="fimoModelBuilder_currentGenomicRegion",
                                with(obj@state$genomicRegion, sprintf("In region: %s:%d-%d", chrom, start, end)))
@@ -85,9 +154,9 @@ setMethod(".fimoBuilderCreatePage", "FimoModelWidget",
                    fluidRow(
                       column(width=7,
                              selectInput("expressionMatrixSelector", "Expression Matrix",
-                                         c("", getExpressionMatrixNames(obj@trenaProject))),
+                                         c("", getExpressionMatrixNames(obj@state$trenaProject))),
                              selectInput("tfbsTrackSelector", "Restrict TFs to those binding in track: ",
-                                         c("", "No restriction: all DNA in current region", names(obj@tbls.regulatoryRegions)))
+                                         c("", "No restriction: all DNA in current region", names(obj@state$tbls.regulatoryRegions)))
                              ),
                       column(width=5,
                              sliderInput("fimoThresholdSelector", "FIMO motif match cutoff -log10(pVal)", 1, 10, value=4, step=0.1),
@@ -208,13 +277,13 @@ setMethod("addEventHandlers", "FimoModelWidget",
            track <- obj@state$tfbsTrack
            xyz <- "building recipe"
            if(track != "No restriction: all DNA in current region"){
-              tbl.restriction <- obj@tbls.regulatoryRegions[[track]]
+              tbl.restriction <- obj@state$tbls.regulatoryRegions[[track]]
               tbl.ov <- as.data.frame(findOverlaps(GRanges(tbl.restriction), GRanges(tbl.regions)))
               tbl.regions <- tbl.restriction[unique(tbl.ov$queryHits),]
               }
            fimo.pvalue.threshold <- 1/10^(obj@state$fimoThreshold)
-           tss <- getTranscriptsTable(obj@trenaProject, obj@state$targetGene)$tss[1]
-           mtx <- getExpressionMatrix(obj@trenaProject, obj@state$expressionMatrixName)
+           tss <- getTranscriptsTable(obj@state$trenaProject, obj@state$targetGene)$tss[1]
+           mtx <- getExpressionMatrix(obj@state$trenaProject, obj@state$expressionMatrixName)
            recipe <- list(title="fimo.firstTry",
                       type="fimo.database",
                       regions=tbl.regions,
@@ -233,7 +302,7 @@ setMethod("addEventHandlers", "FimoModelWidget",
                       fimoPValueThreshold=fimo.pvalue.threshold,
                       orderModelByColumn="rfScore",
                       solverNames=c("lasso", "lassopv", "pearson", "randomForest", "ridge", "spearman"))
-           builder <- trenaSGM::FimoDatabaseModelBuilder(getGenome(obj@trenaProject),
+           builder <- trenaSGM::FimoDatabaseModelBuilder(getGenome(obj@state$trenaProject),
                                                          obj@state$targetGene,
                                                          recipe)
 
@@ -243,8 +312,8 @@ setMethod("addEventHandlers", "FimoModelWidget",
              message(sprintf("starting build"))
              x <- build(builder)
              message(sprintf("build complete"))
-             browser()
              message(sprintf("model has %d tfs", nrow(x$model)))
+             message(print(head(x$model)))
              if(exists("state")){
                 if(state$trenaVizRunning){
                    model.count <- length(state$models)

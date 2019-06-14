@@ -6,15 +6,10 @@
 \alias{.FimoModelWidget}
 \title{Create an FimoModelWidget object}
 \usage{
-FimoModelWidget(trenaProject, targetGene, genomicRegion,
-  tbls.regulatoryRegions, quiet = TRUE)
+FimoModelWidget(quiet = TRUE)
 }
 \arguments{
-\item{targetGene}{character standard geneSymbol name, eg, "GATA2"}
-
 \item{genomicRegion}{character, eg "chr3:128,475,725-128,498,247"}
-
-\item{trenaProjectName}{character eg, "TrenaProjectErythropoiesis"}
 }
 \value{
 An object of the FimoModelWidget class
