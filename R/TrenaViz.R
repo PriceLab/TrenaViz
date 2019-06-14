@@ -65,9 +65,14 @@ TrenaViz <- function(projectName, quiet=TRUE)
    require(projectName, character.only=TRUE)
    initialization.command <- sprintf("trenaProject <- %s()", projectName)
    eval(parse(text=initialization.command))
-
+   setTargetGene(trenaProject, "GATA2")
    genome.build <- getGenome(trenaProject)
    setGenome(bsm, genome.build)
+   setTrenaProject(fimoBuilder, trenaProject)
+   setTargetGene(fimoBuilder, "GATA2")
+   setGenomicRegion(fimoBuilder, list(chrom="chr3", start=128480068, end=128500226))
+   tbls.regulatoryRegions <- get(load("~/github/TrenaViz/inst/devel/tbls.regulatoryRegions.RData"))
+   setRegulatoryRegions(fimoBuilder, tbls.regulatoryRegions)
 
    organism <- "Hsapiens"
    if(genome.build == "mm10")
@@ -148,7 +153,17 @@ setMethod('createServer', 'TrenaViz',
 
       .createTrackFileUploader(session, input, output)
       addEventHandlers(bsm, session, input, output)
+
       js$installTrenaVizReturnKeyHandlers()
+
+      observeEvent(input$sidebarMenu, {
+         tabName <- input$sidebarMenu
+         printf("sidebar menu selected: %s", tabName)
+         if(tabName == "fimoDatabaseModelBuilderTab"){
+            displayPage(fimoBuilder)
+            addEventHandlers(fimoBuilder, session, input, output)
+            }
+         })
 
       observeEvent(input$textInput_offListGene_widget_returnKey, ignoreInit=TRUE, {
          printf("--- textInput_offListGene_widget_returnKey event received")
@@ -208,10 +223,13 @@ setMethod('createServer', 'TrenaViz',
 
 
    output$igvShiny <- renderIgvShiny({
+      printf("project name: %s", getProjectName(obj@project))
+      printf("project targetGene: %s", getTargetGene(obj@project))
       region.list <- getGeneRegion(obj@project, flankingPercent=20)
       chromLocString <- region.list$chromLocString
       tbl.region <- with(region.list, data.frame(chrom=chrom, start=start, end=end, stringsAsFactors=FALSE))
       printf("renderIgvShiny, chrom loc?  %s", chromLocString)
+      browser()
       printf("--- calling sgr(bsm) from renderIgvShiny")
       setGenomicRegion(bsm, tbl.region)
       options <- list(genomeName=getGenome(obj@project),

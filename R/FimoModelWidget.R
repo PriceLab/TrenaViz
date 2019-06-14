@@ -166,14 +166,14 @@ setMethod(".fimoBuilderCreatePage", "FimoModelWidget",
                       ), # fluidRow
                    fluidRow(
                       column(width=2, offset=0,
-                             actionButton("buildModelButton", "Build Regulatory Model")
+                             actionButton("buildFimoModelButton", "Build Regulatory Model")
                              )),
                    #fluidRow(
                    #   column(width=2, offset=0, id="fubar",
                    #          actionButton("viewNewModelButton", "View")
                    #          ))
                    br(),br(),
-                   wellPanel(style="overflow-y:scroll; height:200px", pre(id = "console"))
+                   wellPanel(style="overflow-y:scroll; height:200px", pre(id = "fimoBuildConsole"))
                    ) # fluidPage
 
       }) # createPage
@@ -195,7 +195,7 @@ setMethod("displayPage", "FimoModelWidget",
         printf("=== FimoModelWidget displayPage")
         removeUI(selector="#FimoModelWidgetPageContent", immediate=TRUE)
         insertUI(selector="#FimoModelWidgetPage", where="beforeEnd", .fimoBuilderCreatePage(obj), immediate=TRUE)
-        shinyjs::disable("buildModelButton")
+        shinyjs::disable("buildFimoModelButton")
         #shinyjs::disable("viewNewModelButton")
         })
 
@@ -225,9 +225,9 @@ setMethod("addEventHandlers", "FimoModelWidget",
            obj@state$expressionMatrixName <- mtx.name
            enableBuildButton <- nchar(obj@state$expressionMatrixName) > 0 & nchar(obj@state$tfbsTrack) > 0
            if(enableBuildButton)
-              shinyjs::enable("buildModelButton")
+              shinyjs::enable("buildFimoModelButton")
            else
-              shinyjs::disable("buildModelButton")
+              shinyjs::disable("buildFimoModelButton")
            })
 
         observeEvent(input$tfbsTrackSelector, ignoreInit=TRUE, {
@@ -235,9 +235,9 @@ setMethod("addEventHandlers", "FimoModelWidget",
            obj@state$tfbsTrack <- tfbs.track
            enableBuildButton <- nchar(obj@state$expressionMatrixName) > 0 & nchar(obj@state$tfbsTrack) > 0
            if(enableBuildButton)
-              shinyjs::enable("buildModelButton")
+              shinyjs::enable("buildFimoModelButton")
            else
-              shinyjs::disable("buildModelButton")
+              shinyjs::disable("buildFimoModelButton")
            })
 
         observeEvent(input$viewFimoModelWidgetButton, ignoreInit=FALSE, {
@@ -262,7 +262,7 @@ setMethod("addEventHandlers", "FimoModelWidget",
           obj@state$modelSize <- input$modelSizeSelector
           })
 
-        observeEvent(input$buildModelButton, ignoreInit=TRUE, {
+        observeEvent(input$buildFimoModelButton, ignoreInit=TRUE, {
            printf("==== build model ")
            printf("  targetGene: %s", obj@state$targetGene)
            printf("  genomicRegion: %s", str(obj@state$genomicRegion))
@@ -311,6 +311,9 @@ setMethod("addEventHandlers", "FimoModelWidget",
           withCallingHandlers({
              message(sprintf("starting build"))
              x <- build(builder)
+             model.name <- sprintf("model.%04d", as.integer(1000 * runif(1)))
+             state$models[[model.name]] <- x
+
              message(sprintf("build complete"))
              message(sprintf("model has %d tfs", nrow(x$model)))
              message(print(head(x$model)))
@@ -325,7 +328,7 @@ setMethod("addEventHandlers", "FimoModelWidget",
                 }
              },
            message=function(m){
-              shinyjs::html(id="console", html=m$message, add=TRUE)
+              shinyjs::html(id="fimoBuildConsole", html=m$message, add=TRUE)
               })
            }, error=function(e){
                msg <- e$message
@@ -333,7 +336,7 @@ setMethod("addEventHandlers", "FimoModelWidget",
                showModal(modalDialog(title="trena model building error", msg))
                }) # tryCatch
 
-           }) # obseve buildModelButton
+           }) # obseve buildFimoModelButton
 
      }) # addEventHandlers
 
