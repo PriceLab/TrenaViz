@@ -164,6 +164,9 @@ displayTrack <- function(trenaProject, session, trackName)
    if(grepl("gwas", trackName, ignore.case=TRUE))
       displayBedTrack(trenaProject, session, trackName)
 
+   if(grepl("^ATAC", trackName, ignore.case=TRUE))
+      displayGenomicRegionsTrack(trenaProject, session, trackName)
+
    if(trackName == "enhancers")
       displayEnhancersTrack(trenaProject, session)
 
@@ -188,6 +191,16 @@ displayEncodeDhsTrack <- function(trenaProject, session)
    loadBedGraphTrack(session, "DHS", tbl.tmp, color="black", trackHeight=25, autoscale=TRUE)
 
 } # displayEncodeDhsTrack
+#------------------------------------------------------------------------------------------------------------------------
+displayGenomicRegionsTrack <- function(trenaProject, session, trackName)
+{
+   tbl <- getGenomicRegionsDataset(trenaProject, trackName)
+   tbl.bg <- tbl[, c("chrom", "start", "end", "c7")]
+   colnames(tbl.bg) <- c("chrom", "start", "end", "value")
+   tbl.bg <- subset(tbl.bg, chrom=="chr3")
+   loadBedGraphTrack(session, trackName, tbl.bg, color="red", trackHeight=25, autoscale=TRUE)
+
+} # displayGenomicRegionsTrack
 #------------------------------------------------------------------------------------------------------------------------
 displayGWASTrack <- function(trenaProject, session, trackName)
 {

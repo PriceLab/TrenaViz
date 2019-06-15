@@ -109,8 +109,8 @@ setMethod("setTargetGene", "FimoModelWidget",
 setMethod("setGenomicRegion", "FimoModelWidget",
 
     function(obj, tbl.region){
-       printf("--- FimoModelWidget::setGenomicRegion")
-       print(tbl.region)
+       # printf("--- FimoModelWidget::setGenomicRegion")
+       # print(tbl.region)
        with(tbl.region, printf("size: %5.1f", (end-start)/1000))
        obj@state$genomicRegion <- tbl.region
        })
@@ -118,7 +118,7 @@ setMethod("setGenomicRegion", "FimoModelWidget",
 #------------------------------------------------------------------------------------------------------------------------
 #' areas of (currently) open chromatin
 #'
-#' @rdname setRegulatoryRegion
+#' @rdname setRegulatoryRegions
 #' @aliases setRegulatoryRegions
 #'
 #' @param obj An object of class FimoModelWidget

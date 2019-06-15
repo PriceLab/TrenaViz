@@ -326,7 +326,7 @@ setMethod('createServer', 'TrenaViz',
         textInput("textInput_offListGene", label="Enter off-list gene"), # , placeholder="enter off-list gene here"),
         #div(style="display: inline-block;vertical-align:top; width: 40px; margin-left:0px; margin-top:8px; !important;",
         #actionButton(inputId="setOffListGeneButton", label="Set off-list gene"),
-        selectInput("addTrack", "Add Built-in Track:", .additionalTracksOnOffer(obj)),
+        selectInput("addTrack", "Add Track:", .additionalTracksOnOffer(obj)),
         actionButton(inputId = "addTrackFromFileButton", label="Add Track from File..."),
         selectInput("displayGenomicRegion", "Display Genomic Region:",
                     c("",
@@ -350,6 +350,15 @@ setMethod('createServer', 'TrenaViz',
       trackOfferings[[display.name]] <- detailed.name
       xyz <- 99
       }
+
+   genomicRegionNames <- getGenomicRegionsDatasetNames(obj@project)
+
+   for(i in seq_len(length(genomicRegionNames))){
+      trackName <- genomicRegionNames[i]
+      new.list <- c(trackName)
+      names(new.list) <- trackName
+      trackOfferings <- c(trackOfferings, new.list)
+      } # for i
 
    variantTrackNames <- getVariantDatasetNames(obj@project)
 
