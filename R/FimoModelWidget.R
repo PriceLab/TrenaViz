@@ -172,7 +172,7 @@ setMethod(".fimoBuilderCreatePage", "FimoModelWidget",
                              selectInput("tfbsTrackSelector", "Restrict TFs to those binding in track: ",
                                          multiple=TRUE,
                                          c("", "No restriction: all DNA in current region", names(obj@state$tbls.regulatoryRegions))),
-                              radioButtons("trackLogic", "Track Logic", c("And", "Or"))
+                              radioButtons("trackLogic", "Track Logic", c("Combine tracks", "Intersecting Regions Only"))
                              ),
                       column(width=5,
                              sliderInput("fimoThresholdSelector", "FIMO motif match cutoff -log10(pVal)", 1, 10, value=4, step=0.1),
