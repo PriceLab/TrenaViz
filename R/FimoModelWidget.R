@@ -109,10 +109,15 @@ setMethod("setTargetGene", "FimoModelWidget",
 setMethod("setGenomicRegion", "FimoModelWidget",
 
     function(obj, tbl.region){
-       # printf("--- FimoModelWidget::setGenomicRegion")
-       # print(tbl.region)
+       printf("----------- FimoModelWidget::setGenomicRegion")
+       print(tbl.region)
        with(tbl.region, printf("size: %5.1f", (end-start)/1000))
+       new.roi <- with(tbl.region, sprintf("%s:%d-%d", chrom, start, end))
+       new.region.requested <- TRUE
        obj@state$genomicRegion <- tbl.region
+       genomicRegionsString <- sprintf("%s  (%d bases)", new.roi, with(tbl.region, 1 + end - start))
+       if(!is.null(js$setFimoBuilderGenomicRegionDisplay))  # not initialized on very early calls
+              js$setFimoBuilderGenomicRegionDisplay(genomicRegionsString)
        })
 
 #------------------------------------------------------------------------------------------------------------------------
@@ -129,6 +134,10 @@ setMethod("setGenomicRegion", "FimoModelWidget",
 setMethod("setRegulatoryRegions", "FimoModelWidget",
 
     function(obj, tbls.regulatoryRegions){
+       regionsDatasetNames <- getGenomicRegionsDatasetNames(obj@state$trenaProject)
+       for(i in seq_len(length(regionsDatasetNames))){
+          printf("  genomicRegion dataset: %s", regionsDatasetNames[i])
+          }
         obj@state$tbls.regulatoryRegions <- tbls.regulatoryRegions
         })
 
@@ -161,7 +170,9 @@ setMethod(".fimoBuilderCreatePage", "FimoModelWidget",
                              selectInput("expressionMatrixSelector", "Expression Matrix",
                                          c("", getExpressionMatrixNames(obj@state$trenaProject))),
                              selectInput("tfbsTrackSelector", "Restrict TFs to those binding in track: ",
-                                         c("", "No restriction: all DNA in current region", names(obj@state$tbls.regulatoryRegions)))
+                                         multiple=TRUE,
+                                         c("", "No restriction: all DNA in current region", names(obj@state$tbls.regulatoryRegions))),
+                              radioButtons("trackLogic", "Track Logic", c("And", "Or"))
                              ),
                       column(width=5,
                              sliderInput("fimoThresholdSelector", "FIMO motif match cutoff -log10(pVal)", 1, 10, value=4, step=0.1),

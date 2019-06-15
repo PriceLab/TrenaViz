@@ -70,7 +70,6 @@ TrenaViz <- function(projectName, quiet=TRUE)
    setGenome(bsm, genome.build)
    setTrenaProject(fimoBuilder, trenaProject)
    setTargetGene(fimoBuilder, "GATA2")
-   setGenomicRegion(fimoBuilder, list(chrom="chr3", start=128480068, end=128500226))
    tbls.regulatoryRegions <- get(load("~/github/TrenaViz/inst/devel/tbls.regulatoryRegions.RData"))
    setRegulatoryRegions(fimoBuilder, tbls.regulatoryRegions)
 
@@ -129,6 +128,7 @@ setMethod('createUI', 'TrenaViz',
            useShinyjs(),
            extendShinyjs(script=system.file(package="TrenaViz", "js", "trenaViz.js")),
            extendShinyjs(script=system.file(package="TrenaViz", "js", "bindingSitesManager.js")),
+           extendShinyjs(script=system.file(package="TrenaViz", "js", "fimoBuilder.js")),
           .createBody(obj@project))
        ) # dashboardPage
     return(ui)
@@ -160,8 +160,17 @@ setMethod('createServer', 'TrenaViz',
          tabName <- input$sidebarMenu
          printf("sidebar menu selected: %s", tabName)
          if(tabName == "fimoDatabaseModelBuilderTab"){
+            printf("--- creating fimoBuilder tab, adding event hanlders, setting genomic region")
             displayPage(fimoBuilder)
             addEventHandlers(fimoBuilder, session, input, output)
+            current.region <- state[["chromLocRegion"]]
+            #print("  creating a fresh fimoBuilder page")
+            #print("want to call setGenomicRegion(fimoBuilder, ...")
+            #print("  current.region for fimoBuilder:")
+            print(current.region)  # a chromLocString like this: "chr3:128,480,214-128,487,293"
+            chromLoc <- trena::parseChromLocString(current.region)
+            tbl.region <- with(chromLoc, data.frame(chrom=chrom, start=start, end=end, stringsAsFactors=FALSE))
+            setGenomicRegion(fimoBuilder, tbl.region)
             }
          })
 
@@ -231,6 +240,7 @@ setMethod('createServer', 'TrenaViz',
       printf("renderIgvShiny, chrom loc?  %s", chromLocString)
       printf("--- calling sgr(bsm) from renderIgvShiny")
       setGenomicRegion(bsm, tbl.region)
+      setGenomicRegion(fimoBuilder, tbl.region)
       options <- list(genomeName=getGenome(obj@project),
                       initialLocus=chromLocString,
                       displayMode="EXPANDED",
@@ -262,8 +272,10 @@ setMethod('createServer', 'TrenaViz',
       state[["chromLocRegion"]] <- new.region
       chromLoc <- trena::parseChromLocString(new.region)
       tbl.region <- with(chromLoc, data.frame(chrom=chrom, start=start, end=end, stringsAsFactors=FALSE))
-      #printf("--- calling sgr(bsm) from TrenaViz:observeEvent, input$currentGenomicRegion")
+      printf("--- calling sgr(bsm)(fimoBuilder) from TrenaViz:observeEvent, input$currentGenomicRegion")
+      print(tbl.region)
       setGenomicRegion(bsm, tbl.region)
+      setGenomicRegion(fimoBuilder, tbl.region)
       })
 
    setupIgvAndTableToggling(session, input);
