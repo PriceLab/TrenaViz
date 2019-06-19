@@ -2,17 +2,22 @@ library(shiny)
 library(shinydashboard)
 library(TrenaViz)
 library(shinyjs)
+library(TrenaProjectErythropoiesis)
 #------------------------------------------------------------------------------------------------------------------------
-moduleExample <- ModuleExample("hello trenaViz!")
+trenaProject <- TrenaProjectErythropoiesis()
+setTargetGene(trenaProject, "GATA2")
+moduleExample <- ModuleExample()
+setTrenaProject(moduleExample, trenaProject)
 #------------------------------------------------------------------------------------------------------------------------
 .createSidebar <- function()
 {
    dashboardSidebar(
-   sidebarMenu(id="sidebarMenu",
-       menuItem("main",              tabName = "mainTab"),
-       menuItem("Module Example",      tabName = "moduleExampleTab")
-       )
-    )
+      sidebarMenu(id="sidebarMenu",
+         menuItem("main",              tabName = "mainTab"),
+         menuItem("Module Example",    tabName = "moduleExampleTab"),
+         actionButton("updateGenomicRegionButton", "Update Genomic Region")
+         )
+      )
 
 } # .createSidebar
 #------------------------------------------------------------------------------------------------------------------------
@@ -20,9 +25,7 @@ moduleExample <- ModuleExample("hello trenaViz!")
 {
   tabItem(tabName="mainTab",
      div(
-        h5("Choose Greeting:"),
-        selectInput("messageSelector", NULL,  c("", "hello world!", "huy sqebeqsed!")),
-        actionButton("viewModuleExampleButton", "View ModuleExample")
+        h4("This is a standin for the main tab of TrenaViz")
         )
      )
 
@@ -64,8 +67,23 @@ ui <- dashboardPage(
 #------------------------------------------------------------------------------------------------------------------------
 server <- function(session, input, output)
 {
-   printf("calling moduleExample::addEventHandlers")
-   addEventHandlers(moduleExample, session, input, output)
+   observeEvent(input$updateGenomicRegionButton, ignoreInit=TRUE, {
+      chroms <- sort(sample(paste("chr", c(as.character(1:22), "X", "Y"), sep="")))
+      chrom <- chroms[sample(1:24, 1)]
+      start <- sample(1:50000000, 1)
+      end <- start + sample(1:50000000, 1)
+      tbl.region <- data.frame(chrom=chrom, start=start, end=end, stringsAsFactors=FALSE)
+      setGenomicRegion(moduleExample, tbl.region)
+      })
+
+   observeEvent(input$sidebarMenu, ignoreInit=TRUE, {
+      tabName <- input$sidebarMenu
+      if(tabName == "moduleExampleTab"){
+         printf("--- about to call displayPage(moduleExample)")
+         displayPage(moduleExample)
+         addEventHandlers(moduleExample, session, input, output)
+         }
+      })
 
 } # server
 #------------------------------------------------------------------------------------------------------------------------

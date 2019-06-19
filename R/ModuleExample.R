@@ -10,9 +10,10 @@
 #------------------------------------------------------------------------------------------------------------------------
 .ModuleExample <- setClass("ModuleExample",
                              representation = representation(
-                                quiet="logical",
-                                state="environment")
+                                state="environment",
+                                quiet="logical"
                                 )
+                           )
 #------------------------------------------------------------------------------------------------------------------------
 setGeneric('setMessage',  signature='obj', function(obj, newValue) standardGeneric('setMessage'))
 #------------------------------------------------------------------------------------------------------------------------
@@ -29,34 +30,76 @@ setGeneric('setMessage',  signature='obj', function(obj, newValue) standardGener
 #'
 #' @export
 #'
-ModuleExample <- function(message, quiet=TRUE)
+ModuleExample <- function(quiet=TRUE)
 {
    state <- new.env(parent=emptyenv())
-   state$message <- message
+   state$trenaProject <= NULL
+   state$targetGene <- NULL
+   state$currentGenomicRegion <- NULL
 
-   .ModuleExample(state=state,
-                  quiet=quiet)
+   .ModuleExample(state=state, quiet=quiet)
 
 } # ModuleExample
 #------------------------------------------------------------------------------------------------------------------------
-#' assign a new message to be display
+#' supply tissue-specific data
 #'
-#' @rdname setMessage
+#' @rdname setTrenaProject
+#' @aliases setTrenaProject
 #'
-#' @param newValue  A character string
+#' @param obj An object of class FimoModelWidget
+#' @param trenaProject an instance of a concrete subclass of TrenaProject
 #'
 #' @export
+
+setMethod("setTrenaProject", "ModuleExample",
+
+    function(obj, trenaProject){
+        obj@state$trenaProject <- trenaProject
+        })
+
+#------------------------------------------------------------------------------------------------------------------------
+#' supply tissue-specific data
 #'
-setMethod('setMessage', 'ModuleExample',
-          function(obj, newValue){
-             obj@state$message <- newValue
-          })
+#' @rdname setTrenaProject
+#' @aliases setTrenaProject
+#'
+#' @param obj An object of class FimoModelWidget
+#' @param trenaProject an instance of a concrete subclass of TrenaProject
+#'
+#' @export
+
+setMethod("setTrenaProject", "ModuleExample",
+
+    function(obj, trenaProject){
+        obj@state$trenaProject <- trenaProject
+        })
+
+#------------------------------------------------------------------------------------------------------------------------
+#' set the chromosomal locus of current interestg
+#'
+#' @rdname setGenomicRegion
+#' @aliases setGenomciRegion
+#'
+#' @param obj An object of class FimoModelWidget
+#' @param newRegion a character string
+#'
+#' @export
+
+setMethod("setGenomicRegion", "ModuleExample",
+
+    function(obj, tbl.region){
+       regionString <- with(tbl.region, sprintf("%s:%d-%d", chrom, start, end))
+       printf("new genomicRegion: %s", regionString)
+       if(!is.null(js$setModuleExampleGenomicRegionDisplay))  # not initialized on very early calls
+           js$setModuleExampleGenomicRegionDisplay(regionString)
+
+       })
+
 #------------------------------------------------------------------------------------------------------------------------
 setMethod("show", "ModuleExample",
 
     function(object){
         cat(paste("a ModuleExample object from the TrenaViz package:", "\n"))
-        cat(sprintf("  message: %s\n", obj@state$message))
         })
 
 #------------------------------------------------------------------------------------------------------------------------
@@ -74,13 +117,21 @@ setMethod(".moduleExampleCreatePage", "ModuleExample",
 
       function(obj) {
          fluidPage(id="ModuleExamplePageContent",
-          fluidRow(
-             actionButton(inputId="hideMessageButton", label="Hide"),
-             actionButton(inputId="showMessageButton", label="Show")
-             ),
-          fluidRow(column(width=12, htmlOutput("messageDisplayWidget")))
-          )
-       })
+            extendShinyjs(script=system.file(package="TrenaViz", "js", "moduleExample.js")),
+            fluidRow(
+               actionButton(inputId="hideMessageButton", label="Hide"),
+               actionButton(inputId="showMessageButton", label="Show")
+               ),
+            fluidRow(column(width=8, id="messageDisplayWidget",
+                       h4("hello ModuleExample"),
+                       h4(getProjectName(obj@state$trenaProject)),
+                       h4(sprintf("targetGene: %s", getTargetGene(obj@state$trenaProject))),
+                       h4("goodbye ModuleExample")
+                       )),
+            fluidRow(column(width=3,
+                       h4(id="moduleExample_genomicRegionWidget", "undefined")))
+             )
+          })
 
 #------------------------------------------------------------------------------------------------------------------------
 #' display the page
@@ -98,7 +149,8 @@ setMethod("displayPage", "ModuleExample",
      function(obj){
          printf("ModuleExample displayPage")
          removeUI(selector="#ModuleExamplePageContent", immediate=TRUE)
-         insertUI(selector="#ModuleExamplePage", where="beforeEnd", .moduleExampleCreatePage(obj), immediate=TRUE)
+         insertUI(selector="#ModuleExamplePage", where="beforeEnd",
+                  .moduleExampleCreatePage(obj), immediate=TRUE)
          })
 
 #------------------------------------------------------------------------------------------------------------------------

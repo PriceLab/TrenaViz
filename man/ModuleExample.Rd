@@ -6,7 +6,7 @@
 \alias{.ModuleExample}
 \title{import shiny}
 \usage{
-ModuleExample(message, quiet = TRUE)
+ModuleExample(quiet = TRUE)
 }
 \arguments{
 \item{message}{A character string, one of the supported species names:  hsapiens, mmuscuulus}

@@ -496,7 +496,7 @@ test_buildRegionsTable <- function()
 # beautify the data.frame, display it in the UI DataTable, update the modelSelector pulldown
 displayModel <- function(session, input, output, tbl.model, new.model.name)
 {
-   printf("--- entering displayModel: %s", new.model.name)
+   printf("--- entering displayModel: %s (%d rows)", new.model.name, nrow(tbl.model))
    print(dim(tbl.model))
    tf.names <- tbl.model$gene
    tbl.model <- tbl.model[, -1]

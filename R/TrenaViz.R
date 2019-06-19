@@ -28,7 +28,7 @@ state$trenaVizRunning <- FALSE
 state$models <- list()
 state$tbl.chipSeq <- NULL
 model.count <- 0   # for creating default model names
-MAX.TF.COUNT <- 50   # we display the top max.tf.cout TFs coming back from trena
+MAX.TF.COUNT <- 100   # we display the top max.tf.cout TFs coming back from trena
 
 colors <- brewer.pal(8, "Dark2")
 totalColorCount <- length(colors)
