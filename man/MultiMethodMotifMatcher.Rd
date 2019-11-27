@@ -9,8 +9,14 @@ import motifmatchr
 import universalmotif
 import TFBSTools}
 \usage{
-MultiMethodMotifMatcher(genome, motifMatrix, tbl.regions,
-  sequenceMatchAlgorithm, matchThreshold, quiet = TRUE)
+MultiMethodMotifMatcher(
+  genome,
+  motifMatrix,
+  tbl.regions,
+  sequenceMatchAlgorithm,
+  matchThreshold,
+  quiet = TRUE
+)
 }
 \arguments{
 \item{genome}{A character string, one of the supported genome builds: hg38, mm10}

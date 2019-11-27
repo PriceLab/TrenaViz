@@ -4,21 +4,7 @@
 \name{TrenaViz}
 \alias{TrenaViz}
 \alias{tbl.region}
-\title{import TrenaProject
-import shiny
-import shinydashboard
-import shinyjs
-import later
-import yaml
-import igvShiny
-import DT
-import VariantAnnotation
-import trenaSGM
-importFrom  RColorBrewer brewer.pal
-import colourpicker
-import later
-import MotifDb
-import ggpseqlogo}
+\title{Create an TrenaViz object}
 \format{An object of class \code{data.frame} with 1 rows and 3 columns.}
 \usage{
 tbl.region

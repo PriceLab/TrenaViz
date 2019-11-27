@@ -1,8 +1,8 @@
 Package: TrenaViz
 Type: Package
 Title: TrenaViz
-Version: 0.99.77
-Date: 2019-06-18
+Version: 0.99.78
+Date: 2019-11-26
 Author: Paul Shannon
 Maintainer: Paul Shannon <pshannon@systemsbiology.org>
 Depends: R (>= 3.5.0), igvShiny (>= 0.99.80), RColorBrewer, colourpicker, shiny, shinyjs, shinydashboard,
@@ -11,11 +11,13 @@ Imports: methods,
          BiocGenerics,
          later,
          VariantAnnotation,
-         cyjShiny
+         cyjShiny,
+         GenomicScores,
+         phastCons7way.UCSC.hg38
 Suggests: RUnit, BiocStyle
 Description: build and explore trena models
 License: MIT
 LazyLoad: yes
 biocViews: Visualization, ThirdPartyClient
 Encoding: UTF-8
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.1

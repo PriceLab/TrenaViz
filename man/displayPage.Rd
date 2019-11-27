@@ -2,7 +2,6 @@
 % Please edit documentation in R/BindingSitesManager.R,
 %   R/FimoModelWidget.R, R/GeneGeneExpressionPlotter.R, R/ModuleExample.R,
 %   R/MotifsInRegionsBuilder.R, R/NetworkView.R
-\docType{methods}
 \name{displayPage,BindingSitesManager-method}
 \alias{displayPage,BindingSitesManager-method}
 \alias{displayPage}
@@ -26,26 +25,6 @@
 \S4method{displayPage}{NetworkView}(obj)
 }
 \arguments{
-\item{obj}{An object of class BindingSitesManager}
-
-\item{tf}{character string, the geneSymbol name of the transcription factor}
-
-\item{obj}{An object of class FimoModelWidget}
-
-\item{tf}{character string, the geneSymbol name of the transcription factor}
-
-\item{obj}{An object of class GeneGeneExpressionPlotter}
-
-\item{tf}{character string, the geneSymbol name of the transcription factor}
-
-\item{obj}{An object of class ModuleExample}
-
-\item{tf}{character string, the geneSymbol name of the transcription factor}
-
-\item{obj}{An object of class MotifsInRegionsBuilder}
-
-\item{tf}{character string, the geneSymbol name of the transcription factor}
-
 \item{obj}{An object of class NetworkView}
 
 \item{tf}{character string, the geneSymbol name of the transcription factor}

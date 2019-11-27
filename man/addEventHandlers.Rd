@@ -2,7 +2,6 @@
 % Please edit documentation in R/BindingSitesManager.R,
 %   R/FimoModelWidget.R, R/GeneGeneExpressionPlotter.R, R/ModuleExample.R,
 %   R/MotifsInRegionsBuilder.R, R/NetworkView.R
-\docType{methods}
 \name{addEventHandlers,BindingSitesManager-method}
 \alias{addEventHandlers,BindingSitesManager-method}
 \alias{addEventHandlers}
@@ -13,62 +12,19 @@
 \alias{addEventHandlers,NetworkView-method}
 \title{add shiny event handlers}
 \usage{
-\S4method{addEventHandlers}{BindingSitesManager}(obj, session, input,
-  output)
+\S4method{addEventHandlers}{BindingSitesManager}(obj, session, input, output)
 
 \S4method{addEventHandlers}{FimoModelWidget}(obj, session, input, output)
 
-\S4method{addEventHandlers}{GeneGeneExpressionPlotter}(obj, session, input,
-  output)
+\S4method{addEventHandlers}{GeneGeneExpressionPlotter}(obj, session, input, output)
 
 \S4method{addEventHandlers}{ModuleExample}(obj, session, input, output)
 
-\S4method{addEventHandlers}{MotifsInRegionsBuilder}(obj, session, input,
-  output)
+\S4method{addEventHandlers}{MotifsInRegionsBuilder}(obj, session, input, output)
 
 \S4method{addEventHandlers}{NetworkView}(obj, session, input, output)
 }
 \arguments{
-\item{obj}{An object of class BindingSitesManager}
-
-\item{session}{a Shiny session object}
-
-\item{input}{a Shiny input object}
-
-\item{output}{a Shiny output object}
-
-\item{obj}{An object of class FimoModelWidget}
-
-\item{session}{a Shiny session object}
-
-\item{input}{a Shiny input object}
-
-\item{output}{a Shiny output object}
-
-\item{obj}{An object of class BindingSitesManager}
-
-\item{session}{a Shiny session object}
-
-\item{input}{a Shiny input object}
-
-\item{output}{a Shiny output object}
-
-\item{obj}{An object of class ModuleExample}
-
-\item{session}{a Shiny session object}
-
-\item{input}{a Shiny input object}
-
-\item{output}{a Shiny output object}
-
-\item{obj}{An object of class MotifsInRegionsBuilder}
-
-\item{session}{a Shiny session object}
-
-\item{input}{a Shiny input object}
-
-\item{output}{a Shiny output object}
-
 \item{obj}{An object of class NetworkView}
 
 \item{session}{a Shiny session object}

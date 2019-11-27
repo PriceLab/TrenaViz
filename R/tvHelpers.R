@@ -173,6 +173,9 @@ displayTrack <- function(trenaProject, session, trackName)
    if(trackName == "dhs")
       displayEncodeDhsTrack(trenaProject, session)
 
+   if(trackName == "phast7")
+      displayPhast7ConservationTrack(trenaProject, session)
+
 } # displayTrack
 #------------------------------------------------------------------------------------------------------------------------
 displayEnhancersTrack <- function(trenaProject, session)
@@ -191,6 +194,27 @@ displayEncodeDhsTrack <- function(trenaProject, session)
    loadBedGraphTrack(session, "DHS", tbl.tmp, color="black", trackHeight=25, autoscale=TRUE)
 
 } # displayEncodeDhsTrack
+#------------------------------------------------------------------------------------------------------------------------
+displayPhast7ConservationTrack <- function(trenaProject, session)
+{
+   printf("--- displayPhast7ConservationTrack")
+   new.region <- state[["chromLocRegion"]]
+   chromLoc <- trena::parseChromLocString(new.region)
+
+   starts <- with(chromLoc, seq(start, end, by=5))
+   ends <- starts + 5
+   count <- length(starts)
+   tbl.blocks <- data.frame(chrom=rep(chromLoc$chrom, count), start=starts, end=ends,
+                            stringsAsFactors=FALSE)
+   tbl.cons7 <- as.data.frame(gscores(phastCons7way.UCSC.hg38,
+                                      GRanges(tbl.blocks)),
+                              stringsAsFactors=FALSE)
+   tbl.cons7$chrom <- as.character(tbl.cons7$seqnames)
+   tbl.cons7 <- tbl.cons7[, c("chrom", "start", "end", "default")]
+   colnames(tbl.cons7) <- c("chrom", "start", "end", "score")
+   loadBedGraphTrack(session, "phast7", tbl.cons7, color="black", trackHeight=25, autoscale=TRUE)
+
+} # displayPhast7ConservationTrack
 #------------------------------------------------------------------------------------------------------------------------
 displayGenomicRegionsTrack <- function(trenaProject, session, trackName)
 {
@@ -256,7 +280,10 @@ setupDisplayRegion <- function(trenaProject, session, input, output)
       margin <- 5000
       loc.string <-switch(requestedRegion,
                           fullEnhancerRegion = {getGeneEnhancersRegion(trenaProject, 10)$chromLocString},
-                          fullGeneRegion = {getGeneRegion(trenaProject, 20)$chromLocString})
+                          fullGeneRegion = {getGeneRegion(trenaProject, 20)$chromLocString},
+                          proximal.promoter.2500.500 = {getProximalPromoter(trenaProject, 2500, 500)$chromLocString})
+
+      printf("--- new region: %s", loc.string)
       showGenomicRegion(session, loc.string);
       later(function() {updateSelectInput(session, "displayGenomicRegion", selected=character(0))}, 1)
       })

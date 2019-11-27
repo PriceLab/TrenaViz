@@ -1,18 +1,20 @@
-#' import TrenaProject
-#' import shiny
-#' import shinydashboard
-#' import shinyjs
-#' import later
-#' import yaml
-#' import igvShiny
-#' import DT
-#' import VariantAnnotation
-#' import trenaSGM
-#' importFrom  RColorBrewer brewer.pal
-#' import colourpicker
-#' import later
-#' import MotifDb
-#' import ggpseqlogo
+#' @import TrenaProject
+#' @import shiny
+#' @import shinydashboard
+#' @import shinyjs
+#' @import later
+#' @import yaml
+#' @import igvShiny
+#' @import DT
+#' @import VariantAnnotation
+#' @import trenaSGM
+#' @importFrom  RColorBrewer brewer.pal
+#' @import colourpicker
+#' @import later
+#' @import MotifDb
+#' @import ggseqlogo
+#' @importFrom GenomicScores gscores
+#' @import phastCons7way.UCSC.hg38
 #------------------------------------------------------------------------------------------------------------------------
 #' @name TrenaViz
 #' @rdname TrenaViz
@@ -342,6 +344,7 @@ setMethod('createServer', 'TrenaViz',
         actionButton(inputId = "addTrackFromFileButton", label="Add Track from File..."),
         selectInput("displayGenomicRegion", "Display Genomic Region:",
                     c("",
+                      "Proximal Promter -2500/+500" = "proximal.promoter.2500.500",
                       "Full Gene" = "fullGeneRegion",
                       "Full Enhancers Region" = "fullEnhancerRegion")),
         actionButton(inputId="removeUserAddedTracks", label="Remove Added Tracks")
@@ -352,7 +355,10 @@ setMethod('createServer', 'TrenaViz',
 #------------------------------------------------------------------------------------------------------------------------
 .additionalTracksOnOffer <- function(obj)
 {
-   trackOfferings <- list("", "DNase HS (encode, clustered)"="dhs")
+   trackOfferings <- list("",
+                          "DNase HS (encode, clustered)"="dhs",
+                          "phast7" = "phast7")
+
    dm <- state$dataManifest
 
    for(i in seq_len(length(dm))){

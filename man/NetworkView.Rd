@@ -9,8 +9,7 @@ import cyjShiny
 import TrenaProject
 import graph}
 \usage{
-NetworkView(targetGene, tss, tbl.model, tbl.regulatoryRegions,
-  quiet = TRUE)
+NetworkView(targetGene, tss, tbl.model, tbl.regulatoryRegions, quiet = TRUE)
 }
 \arguments{
 \item{quiet}{A logical indicating whether or not the Trena object should print output}
