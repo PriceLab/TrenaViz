@@ -1,8 +1,8 @@
 Package: TrenaViz
 Type: Package
 Title: TrenaViz
-Version: 0.99.78
-Date: 2019-11-26
+Version: 0.99.79
+Date: 2020-04-29
 Author: Paul Shannon
 Maintainer: Paul Shannon <pshannon@systemsbiology.org>
 Depends: R (>= 3.5.0), igvShiny (>= 0.99.80), RColorBrewer, colourpicker, shiny, shinyjs, shinydashboard,
@@ -20,4 +20,4 @@ License: MIT
 LazyLoad: yes
 biocViews: Visualization, ThirdPartyClient
 Encoding: UTF-8
-RoxygenNote: 7.0.1
+RoxygenNote: 7.1.0

@@ -184,7 +184,7 @@ setMethod("addEventHandlers", "NetworkView",
              yPos <- nodeData(g, attr="yPos")
              tbl.pos <- data.frame(id=names(xPos), x=as.numeric(xPos), y=as.numeric(yPos), stringsAsFactors=FALSE)
              obj@state$tbl.pos <- tbl.pos
-             cyjShiny(graph.json, layoutName="cola", style_file=style.file, width=1000, height=1000)
+             cyjShiny(graph.json, layoutName="cola", styleFile=style.file, width=1000, height=1000)
              })
         })
 
